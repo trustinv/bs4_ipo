@@ -38,12 +38,6 @@ def extract_data_from_table2(table):
     print(result)
     return result
 
-    # is_rowspan = tds.find("td")
-    # if (rowspan := is_rowspan.get("rowspan")) is not None:
-    #     pass
-    # print(tds)
-
-
 def extract_data_from_table3(table):
     result = {"보호예수": [], "유통가능": []}
     trs = table.select("tr")[2:-2]
@@ -61,13 +55,9 @@ def extract_data_from_table3(table):
     result["보호예수"][0].pop(0)
     return result
 
-    # return [td.text for td in tds]
-
-
 def scrape_ipostock(url):
     headers = {"User-Agent": get_user_agents()}
 
-    # request 통신 에러 발생시 시스템 종료
     try:
         req = requests.get(url, headers=headers)
     except Exception:
