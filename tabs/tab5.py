@@ -30,13 +30,9 @@ def extract_data_from_table2(soup):
                 result.append(td.text.strip())
     return result
 
-    # return [td.text for td in tds]
-
 
 def scrape_ipostock(url):
     headers = {"User-Agent": get_user_agents()}
-
-    # request 통신 에러 발생시 시스템 종료
     try:
         req = requests.get(url, headers=headers)
     except Exception:
