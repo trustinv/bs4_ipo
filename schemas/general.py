@@ -1,8 +1,17 @@
-from dataclasses import dataclass
+import re
+from typing import List
 from datetime import datetime
+
 from enum import Enum
-from utilities.validations import Validations
+from pydantic import BaseModel, validator, Field
+
 from utilities import converters
+from ipo.schemas.company_info_financial import CompanyInfoFinancialSchema
+from ipo.schemas.company_info_prediction import CompanyInfoPredictionSchema
+from ipo.schemas.company_info_shareholder import CompanyInfoShareholderSchema
+from ipo.schemas.company_info_prediction import CompanyInfoPredictionSchema
+from ipo.schemas.company_info_subscriber import CompanyInfoSubscriberSchema
+from ipo.schemas.app_calendar import AppCalendarSchema
 
 
 class State(Enum):
@@ -12,8 +21,7 @@ class State(Enum):
     UPLOAD = "upload"
 
 
-@dataclass
-class GeneralBase(Validations):
+class GeneralBase(BaseModel):
     ci_market_separation: str = ""
     ci_progress: str = ""
     ci_name: str = ""
@@ -75,13 +83,13 @@ class GeneralBase(Validations):
     ci_attractiveness_score: int = 0
     ci_public_offering_stocks: str = ""
     ci_professional_investor_stock: int = 0
-    ci_professional_investor_rate: int = 0
+    ci_professional_investor_rate: float = 0.0
     ci_esa_stock: int = 0
-    ci_esa_rate: int = 0
+    ci_esa_rate: float = 0.0
     ci_general_subscriber_stock: int = 0
-    ci_general_subscriber_rate: int = 0
+    ci_general_subscriber_rate: float = 0.0
     ci_overseas_investor_stock: int = 0
-    ci_overseas_investor_rate: int = 0
+    ci_overseas_investor_rate: float = 0.0
     ci_noted_items: str = ""
     ci_noted_items_check: str = ""
     ci_guidelines: str = ""
@@ -118,80 +126,210 @@ class GeneralBase(Validations):
 
 
 class GeneralCreateSchema(GeneralBase):
-    # def validate_ci_name(self, value, **_):
-    #     name, _ = converters.represent_ci_name_n_code(value)
-    #     return name
-
-    # def validate_ci_code(self, value, **_):
-    #     _, code = converters.represent_ci_name_n_code(value)
-    #     return code
-
-    def validate_ci_market_separation(self, value, **_):
+    @validator("ci_market_separation", pre=True)
+    def validate_ci_market_separation(cls, value):
         return converters.extensions_to_string(value)
 
-    def validate_ci_list_type(self, value, **_):
+    @validator("ci_list_type", pre=True)
+    def validate_ci_list_type(cls, value):
         return converters.ci_list_type(value)
 
-    def validate_ci_review_c_date(self, value, **_):
+    @validator("ci_review_c_date", pre=True)
+    def convert_ci_review_c_date(cls, value):
         return converters.dot_dash_to_slash(value)
 
-    def validate_ci_review_a_date(self, value, **_):
+    @validator("ci_review_a_date", pre=True)
+    def convert_ci_review_a_date(cls, value):
         return converters.dot_dash_to_slash(value)
 
-    def validate_ci_establishment_date(self, value, **_):
+    @validator("ci_establishment_date", pre=True)
+    def convert_ci_establishment_date(cls, value):
         return converters.dot_dash_to_slash(value)
 
-    def validate_ci_settlement_month(self, value, **_):
-        return converters.month_to_int(value)
+    @validator("ci_settlement_month", pre=True)
+    def convert_ci_settlement_month(cls, value):
+        return int(converters.only_digits(value))
 
-    def validate_ci_worker_cnt(self, value, **_):
-        return converters.worker_to_int(value)
+    @validator("ci_worker_cnt", pre=True)
+    def convert_ci_worker_cnt(cls, value):
+        return int(converters.only_digits(value))
 
-    def validate_ci_turnover(self, value, **_):
+    @validator("ci_turnover", pre=True)
+    def convert_ci_turnover(cls, value):
         return converters.one_millon_won_to_float(value)
 
-    def validate_ci_before_corporate_tax(self, value, **_):
+    @validator("ci_before_corporate_tax", pre=True)
+    def convert_ci_before_corporate_tax(cls, value):
         return converters.one_millon_won_to_float(value)
 
-    def validate_ci_net_profit(self, value, **_):
+    @validator("ci_net_profit", pre=True)
+    def convert_ci_net_profit(cls, value):
         return converters.one_millon_won_to_float(value)
 
-    def validate_ci_capital(self, value, **_):
+    @validator("ci_capital", pre=True)
+    def convert_ci_capital(cls, value):
         return converters.one_millon_won_to_float(value)
 
-    def validate_ci_largest_shareholder_rate(self, value, **_):
+    @validator("ci_largest_shareholder_rate", pre=True)
+    def convert_ci_largest_shareholder_rate(cls, value):
         return converters.string_rate_to_percentage(value)
 
-    def validate_ci_promise_rate(self, value, **_):
+    @validator("ci_promise_rate", pre=True)
+    def convert_ci_promise_rate(cls, value):
         return converters.string_rate_to_float(value)
 
-    def validate_ci_po_expected_amount(self, value, **_):
+    @validator("ci_po_expected_amount", pre=True)
+    def convert_ci_po_expected_amount(cls, value):
         return converters.ci_po_expected_amount(value)
 
-    def validate_ci_listing_expected_stocks(self, value, **_):
+    @validator("ci_listing_expected_stocks", pre=True)
+    def convert_ci_listing_expected_stocks(cls, value):
         return converters.only_digits(value)
 
-    def validate_ci_before_po_capital(self, value, **_):
+    @validator("ci_after_po_stocks", pre=True)
+    def convert_ci_after_po_stocks(cls, value):
+        return converters.empty_string_to_float(value)
+
+    @validator("ci_before_po_capital", pre=True)
+    def conver_before_po_capital(cls, value):
         return converters.string_capital_to_float(value)
 
-    def validate_ci_before_po_stocks(self, value, **_):
-        return converters.string_stocks_to_int(value)
-
-    def validate_ci_after_po_capital(self, value, **_):
+    @validator("ci_after_po_capital", pre=True)
+    def conver_after_capital_to_int(cls, value):
         return converters.string_capital_to_float(value)
 
-    def validate_ci_after_po_stocks(self, value, **_):
+    @validator("ci_before_po_stocks", pre=True)
+    def conver_before_po_stocks(cls, value):
         return converters.string_stocks_to_int(value)
 
-    def validate_ci_lead_manager(self, value, **_):
+    @validator("ci_after_po_stocks", pre=True)
+    def conver_after_po_stocks(cls, value):
+        return converters.string_stocks_to_int(value)
+
+    @validator("ci_lead_manager", pre=True)
+    def convert_ci_lead_manager(cls, value):
         return converters.none_to_empty_string(value)
 
-    def validate_ci_homepage(self, value, **_):
+    @validator("ci_homepage")
+    def convert_ci_homepage(cls, value):
         return converters.none_to_empty_string(value)
 
+    @validator("ci_big_ir_plan", pre=True)
+    def convert_ci_big_ir_plan(cls, value):
+        value = value.strip()
+        return value
 
-if __name__ == "__main__":
-    g = GeneralCreateSchema(ci_name="hello")
-    from pprint import pprint as pp
+    @validator("ci_confirm_po_price", pre=True)
+    def convert_ci_confirm_po_price(cls, value):
+        if isinstance(value, str):
+            return int(converters.only_digits(value))
+        return value
 
-    pp(g)
+    @validator("ci_confirm_po_amount", pre=True)
+    def convert_ci_confirm_po_amount(cls, value):
+        if isinstance(value, str):
+            return float(converters.only_digits(value))
+        return value
+
+    @validator("ci_professional_investor_stock", pre=True)
+    def convert_ci_professional_investor_stock(cls, value):
+        value = int(converters.only_digits(value))
+        return value
+
+    @validator("ci_professional_investor_rate", pre=True)
+    def convert_ci_professional_investor_rate(cls, value):
+        value = converters.string_rate_to_percentage(value)
+        return value
+
+    @validator("ci_esa_stock", pre=True)
+    def convert_ci_esa_stock(cls, value):
+        value = int(converters.only_digits(value))
+        return value
+
+    @validator("ci_esa_rate", pre=True)
+    def convert_ci_esa_rate(cls, value):
+        value = converters.string_rate_to_percentage(value)
+        return value
+
+    @validator("ci_general_subscriber_stock", pre=True)
+    def convert_ci_general_subscriber_stock(cls, value):
+        value = int(converters.only_digits(value))
+        return value
+
+    @validator("ci_general_subscriber_rate", pre=True)
+    def convert_ci_general_subscriber_rate(cls, value):
+        value = converters.string_rate_to_percentage(value)
+        return value
+
+    @validator("ci_overseas_investor_stock", pre=True)
+    def convert_ci_overseas_investor_stock(cls, value):
+        value = int(converters.only_digits(value))
+        return value
+
+    @validator("ci_overseas_investor_rate", pre=True)
+    def convert_ci_overseas_investor_rate(cls, value):
+        value = converters.string_rate_to_percentage(value)
+        return value
+
+    @validator("ci_hope_po_price", pre=True)
+    def convert_ci_hope_po_price(cls, value):
+        string_value = converters.range_of_digits(value)
+        value = string_value.strip()
+        return value
+
+    @validator("ci_hope_po_amount", pre=True)
+    def convert_ci_hope_po_amount(cls, value):
+        string_value = converters.range_of_digits(value)
+        value = string_value.strip()
+        return value
+
+    @validator("ci_subscription_competition_rate", pre=True)
+    def convert_ci_subscription_competition_rate(cls, value):
+        result = value.strip().replace("대", ":")
+        return result
+
+    @validator("ci_subscription_warrant_money_rate", pre=True)
+    def convert_ci_subscription_warrant_money_rate(cls, value):
+        result = value.strip()
+        return result
+
+    @validator("ci_listing_date", pre=True)
+    def convert_ci_listing_date(cls, value):
+
+        result = converters.dot_dash_to_slash(value)
+        return result
+
+    @validator("ci_payment_date", pre=True)
+    def convert_ci_payment_date(cls, value):
+        result = converters.dot_dash_to_slash(value)
+        return result
+
+    @validator("ci_refund_date", pre=True)
+    def convert_ci_refund_date(cls, value):
+
+        result = converters.dot_dash_to_slash(value)
+        return result
+
+    @validator("ci_public_subscription_date", pre=True)
+    def convert_ci_public_subscription_date(cls, value):
+        result = converters.dot_dash_to_slash(value)
+        return result
+
+    @validator("ci_competition_rate", pre=True)
+    def convert_ci_competition_rate(cls, value):
+        value = re.sub(r"\s", "", value)
+        head = value.split(".")[0]
+        return f"{head}:1"
+
+
+class GeneralSchema(GeneralBase):
+    ci_idx: int
+    shareholders: List[CompanyInfoShareholderSchema]
+    predictions = List[CompanyInfoPredictionSchema]
+    subscribers = List[CompanyInfoSubscriberSchema]
+    financials = List[CompanyInfoFinancialSchema]
+    app_calendars = List[AppCalendarSchema]
+
+    class Config:
+        orm_mode = True
+        arbitrary_types_allowed = True

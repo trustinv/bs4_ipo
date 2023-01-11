@@ -1,18 +1,8 @@
 import re
 
 
-# def represent_ci_name_n_code(value):
-#     match = re.search(r"(\S+)\s+(\d+)", value)
-#     b, c = match.group(1), match.group(2)
-#     return b, c
-
-
-# def allow_koreans_letters(value):
-#     # Define a regular expression pattern to match non-Korean characters
-#     pattern = re.compile("[^\u3131-\u3163\uac00-\ud7a3]+")
-
-#     # Use the sub method to replace all non-Korean characters with an empty string
-#     return pattern.sub("", value)
+def remove_whitespace(value):
+    return re.sub(r"\s", "", value)
 
 
 def none_to_empty_string(value):
@@ -49,7 +39,7 @@ def dot_dash_to_slash(value):
 def month_to_int(value):
     if isinstance(value, int):
         return value
-    value = re.search(r"\d+", value).group()
+    result = re.search(r"\d+", value).group()
     return int(value)
 
 
@@ -81,7 +71,8 @@ def ci_po_expected_amount(value):
 
 
 def only_digits(value):
-    return "".join(re.findall(r"\d+", value))
+    if isinstance(value, str):
+        return "".join(re.findall(r"\d+", value))
 
 
 def empty_string_to_float(value):
@@ -90,7 +81,10 @@ def empty_string_to_float(value):
 
 
 def string_percentage_to_float(value):
-    return float(re.search(r"\d+\.\d+", value).group())
+    if isinstance(value, str):
+        result = float(re.search(r"\d+\.\d+", value).group())
+        return result
+    return value
 
 
 def string_capital_to_float(value):
@@ -103,3 +97,7 @@ def string_stocks_to_int(value):
     if isinstance(value, str):
         value = re.sub(r"[^\d]", "", value)
     return int(value) if value else 0
+
+
+def range_of_digits(value):
+    return re.sub(r"[\xa0억원원]", "", value)
