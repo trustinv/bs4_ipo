@@ -18,28 +18,32 @@ class PredictionBaseSchema(BaseModel):
 class PredictionCreateSchema(PredictionBaseSchema):
     @validator("ci_price", pre=True)
     def convert_ci_price(cls, value):
-        value = value.strip()
+        if isinstance(value, str):
+            value = value.strip()
+            return value
         return value
 
     @validator("ci_incidence", pre=True)
     def convert_ci_incidence(cls, value):
-        value = int(converters.only_digits(value))
-        return value
-
-    @validator("ci_incidence_specific_gravity", pre=True)
-    def convert_ci_incidence_specific_gravity(cls, value):
-        value = float(converters.only_digits(value))
+        if isinstance(value, str):
+            value = int(converters.only_digits(value))
+            return value
         return value
 
     @validator("ci_participation", pre=True)
     def convert_ci_participation(cls, value):
-        value = int(converters.only_digits(value))
+        if isinstance(value, str):
+            value = int(converters.only_digits(value))
+            return value
         return value
+
+    @validator("ci_incidence_specific_gravity", pre=True)
+    def convert_ci_incidence_specific_gravity(cls, value):
+        return converters.only_digits_to_float(value)
 
     @validator("ci_participation_specific_gravity", pre=True)
     def convert_ci_participation_specific_gravity(cls, value):
-        value = float(converters.only_digits(value))
-        return value
+        return converters.only_digits_to_float(value)
 
 
 class PredictionSchema(PredictionBaseSchema):

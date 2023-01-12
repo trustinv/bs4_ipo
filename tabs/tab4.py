@@ -84,7 +84,8 @@ def extract_data_from_table4(table):
     return result
 
 
-def scrape_ipostock(url):
+def scrape_ipostock(code):
+    url = f"http://www.ipostock.co.kr/view_pg/view_04.asp?code={code}"
     headers = {"User-Agent": get_user_agents()}
 
     try:
@@ -92,8 +93,8 @@ def scrape_ipostock(url):
     except Exception:
         sys.exit()
 
-    soup = BeautifulSoup(req.content, "html.parser", from_encoding="utf-8")
-    table1, table2, table3, table4, _ = soup.select("table.view_tb")
+    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
+    table1, table2, table3, table4, *_ = soup.select("table.view_tb")
 
     table1_data = extract_data_from_table1(table1)
     table2_data = extract_data_from_table2(table2)

@@ -22,11 +22,11 @@ def ci_list_type(value):
 
 
 def one_millon_won_to_float(value):
-    if not isinstance(value, float):
-        value = re.sub(r"\xa0백만원", "", value)
-        value = value.replace(",", "")
-        return float(int(int(value) / 100))
-    return 0.0
+    if not value.replace(",", "").replace("백만원", "").isnumeric():
+        return 0.0
+    value = re.sub(r"백만원", "", value)
+    value = value.replace(",", "")
+    return float(int(int(value) / 100))
 
 
 def dot_dash_to_slash(value):
@@ -52,10 +52,12 @@ def worker_to_int(value):
 
 def string_rate_to_percentage(value):
     if not isinstance(value, float):
-        value = re.search(r"\d+", value).group()
+        match = re.search(r"\d+", value)
+        if match is None:
+            return 0.0
+        value = match.group()
         value = float(value)
         return value / 100
-    return value
 
 
 def string_rate_to_float(value):
@@ -73,6 +75,27 @@ def ci_po_expected_amount(value):
 def only_digits(value):
     if isinstance(value, str):
         return "".join(re.findall(r"\d+", value))
+
+
+def only_digits_to_int(value):
+    if isinstance(value, str):
+        if value == "":
+            return 0
+        value = "".join(re.findall(r"\d+", value))
+        if value == "":
+            return 0
+    return 0
+
+
+def only_digits_to_float(value):
+    if isinstance(value, str):
+        if value == "":
+            return 0.0
+        value = "".join(re.findall(r"\d+", value))
+        if value == "":
+            return 0.0
+        return float(value)
+    return value
 
 
 def empty_string_to_float(value):

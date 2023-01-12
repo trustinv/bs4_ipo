@@ -1,7 +1,9 @@
+import math
 import pandas as pd
 
 
-def scrape_ipostock(url):
+def scrape_ipostock(code):
+    url = f"http://www.ipostock.co.kr/view_pg/view_03.asp?code={code}"
     keys = [
         "ci_category1",
         "ci_category2",
@@ -18,20 +20,27 @@ def scrape_ipostock(url):
         "ci_net_income",
     ]
     df = pd.read_html(url)
+    df1 = df[21]
+    df1 = df1[~df1[0].isin(["자산총계", "부채총계", "자본총계"])]
     df1 = df[21].iloc[:, 1:4]
-    df2 = df1.drop(labels=[4, 7, 12], axis=0)
     df_str = df1.iloc[:2, :]
-    df2 = df2.loc[2:, :].astype("float")
+    df2 = df1.loc[2:, :].astype("float")
     result = pd.concat([df_str, df2])
     df3 = result.T.values
-    temp = []
-    for data in df3:
-        instance = {
-            key: float(int(value / (10e7))) if isinstance(value, float) else value
-            for key, value in zip(keys, data)
-        }
-        temp.append(instance)
-    return temp
+    temp_data = []
+    for data_row in df3:
+        data_instance = {}
+        for key, value in zip(keys, data_row):
+            if isinstance(value, float):
+                if math.isnan(value):
+                    processed_value = value
+                else:
+                    processed_value = float(int(value / (10e7)))
+            else:
+                processed_value = value
+            data_instance[key] = processed_value
+        temp_data.append(data_instance)
+    return temp_data
 
 
 if __name__ == "__main__":
@@ -40,3 +49,4 @@ if __name__ == "__main__":
     from schemas.financial import FinancialCreateSchema
 
     s = [FinancialCreateSchema(**shareholder) for shareholder in financial_result]
+    print(s)

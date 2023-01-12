@@ -47,7 +47,7 @@ def extract_data_from_table2(table):
     return result
 
 
-def extract_data_from_table3(table):
+def extract_data_from_table3(table, url):
     keys = [
         "ci_category",
         "ci_category_name",
@@ -61,6 +61,7 @@ def extract_data_from_table3(table):
     result = []
     categories1 = []
     categories2 = []
+
     for idx, i in enumerate(tds[1:]):
         if flag == 1:
             if "유통가능" in i.text:
@@ -83,22 +84,24 @@ def extract_data_from_table3(table):
     return result
 
 
-def scrape_ipostock(url):
+def scrape_ipostock(code):
+    url = f"http://www.ipostock.co.kr/view_pg/view_02.asp?code={code}"
     headers = {"User-Agent": get_user_agents()}
 
-    try:
-        req = requests.get(url, headers=headers)
-    except Exception:
-        sys.exit()
+    # try:
+    req = requests.get(url, headers=headers)
 
-    soup = BeautifulSoup(req.content, "html.parser", from_encoding="utf-8")
-    table1, table2, table3 = soup.find_all("table", class_="view_tb")[:-1]
+    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
+    table1, table2, table3 = soup.find_all("table", class_="view_tb")[:3]
 
     table1_data = extract_data_from_table1(table1)
     table2_data = extract_data_from_table2(table2)
-    table3_data = extract_data_from_table3(table3)
+    table3_data = extract_data_from_table3(table3, url)
 
     return {**table1_data, **table2_data}, table3_data
+    # except Exception:
+    #     print(url)
+    #     sys.exit()
 
 
 if __name__ == "__main__":

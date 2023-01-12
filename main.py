@@ -11,41 +11,72 @@ from schemas.shareholder import ShareholderCreateSchema
 from schemas.prediction import PredictionCreateSchema
 
 
-def scrate_categories():
+def scrape_categories():
     # request 통신 에러 발생시 시스템 종료
     try:
         req = requests.get(url, headers={"User-Agent": get_user_agents()})
     except Exception:
         sys.exit()
 
-    soup = BeautifulSoup(req.content, "html.parser", from_encoding="utf-8")
+    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
 
 
 if __name__ == "__main__":
     import a_tags
+    import settings
+    import company_code
 
-    code = "B202206162"
-    url = "http://www.ipostock.co.kr/view_pg"
-    categories = a_tags.scrape_categories(url, code)
+    count = 0
 
-    general_result1 = tab1.scrape_ipostock(categories[0])
-    general_result2, shareholder_results = tab2.scrape_ipostock(categories[1])
-    financial_results = tab3.scrape_ipostock(categories[2])
-    general_result4, subscriber_results = tab4.scrape_ipostock(categories[3])
-    prediction_results, general_result5 = tab5.scrape_ipostock(categories[4])
+    company_codes = company_code.scrape_company_codes()
 
-    general_result = {**general_result1, **general_result2, **general_result4, **general_result5}
+    url = f"{settings.IPO_URL}/view_pg"
+    company_codes = company_code.scrape_company_codes()
 
-    general_results = GeneralCreateSchema(**general_result)
-    share_results = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
-    sub_results = [SubscriberCreateSchema(**subscriber) for subscriber in subscriber_results]
-    f_results = [FinancialCreateSchema(**shareholder) for shareholder in financial_results]
-    p_results = [PredictionCreateSchema(**prediction) for prediction in prediction_results]
+    for code in company_codes[0:1]:
+        general_result = {}
 
-    print(
-        general_results,
-        share_results,
-        sub_results,
-        f_results,
-        p_results,
-    )
+        categories = a_tags.scrape_categories(url, code)
+
+        for category in categories:
+            if category == 1:
+                result = tab1.scrape_ipostock(code)
+                if result:
+                    general_result.update(result)
+            elif category == 2:
+                result, shareholder_results = tab2.scrape_ipostock(code)
+                if result:
+                    general_result.update(result)
+            elif category == 3:
+                financial_results = tab3.scrape_ipostock(code)
+            elif category == 4:
+                result, subscriber_results = tab4.scrape_ipostock(code)
+                if result:
+                    general_result.update(result)
+            elif category == 5:
+                prediction_results, general_result5 = tab5.scrape_ipostock(code)
+                if general_result5:
+                    general_result.update(general_result5)
+
+        general = GeneralCreateSchema(**general_result)
+        shareholders = [
+            ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results or []
+        ]
+        subscribers = [
+            SubscriberCreateSchema(**subscriber) for subscriber in subscriber_results or []
+        ]
+        financials = [FinancialCreateSchema(**financial) for financial in financial_results or []]
+        predictions = [
+            PredictionCreateSchema(**prediction) for prediction in prediction_results or []
+        ]
+        from pprint import pprint as pp
+
+        print(
+            general,
+            shareholders,
+            subscribers,
+            financials,
+            predictions,
+        )
+        count += 1
+        print(count)

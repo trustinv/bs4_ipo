@@ -148,11 +148,11 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_settlement_month", pre=True)
     def convert_ci_settlement_month(cls, value):
-        return int(converters.only_digits(value))
+        return converters.only_digits_to_int(value)
 
     @validator("ci_worker_cnt", pre=True)
     def convert_ci_worker_cnt(cls, value):
-        return int(converters.only_digits(value))
+        return converters.only_digits_to_int(value)
 
     @validator("ci_turnover", pre=True)
     def convert_ci_turnover(cls, value):

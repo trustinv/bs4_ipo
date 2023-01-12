@@ -6,27 +6,41 @@ from bs4 import BeautifulSoup
 from agents import get_user_agents
 
 
-def extract_data_from_table1(soup):
-    keys = [
-        "ci_price",
-        "ci_incidence",
-        "ci_incidence_specific_gravity",
-        "ci_participation",
-        "ci_participation_specific_gravity",
-    ]
-    results = []
-    table = soup.find("table", width="780", cellpadding="0", class_="view_tb")
-    trs = table.select("tr")[2:-1]
-    for tr in trs:
-        tds = tr.select("td")
-        temp = []
-        for td in tds:
-            temp.append(td.text)
-        results.append(temp)
+def extract_data_from_table1(soup, url):
+    try:
+        keys = [
+            "ci_price",
+            "ci_incidence",
+            "ci_incidence_specific_gravity",
+            "ci_participation",
+            "ci_participation_specific_gravity",
+        ]
+        results = []
+        table = soup.find("table", width="780", cellpadding="0", class_="view_tb")
+        trs = table.select("tr")[2:-1]
+        for tr in trs:
+            tds = tr.select("td")
+            temp = []
+            for td in tds:
+                temp.append(td.text)
+            results.append(temp)
 
-    result = [dict(zip(keys, result)) for result in results]
+        result = [dict(zip(keys, result)) for result in results]
 
-    return result
+        return result
+    except AttributeError:
+        print("*" * 100)
+        print(url)
+        result = [
+            {
+                "ci_price": "",
+                "ci_incidence": 0,
+                "ci_incidence_specific_gravity": 0.0,
+                "ci_participation": 0,
+                "ci_participation_specific_gravity": 0.0,
+            }
+        ]
+        return result
 
 
 def extract_data_from_table2(soup):
@@ -43,16 +57,17 @@ def extract_data_from_table2(soup):
     return results
 
 
-def scrape_ipostock(url):
+def scrape_ipostock(code):
+    url = f"http://www.ipostock.co.kr/view_pg/view_05.asp?code={code}"
     headers = {"User-Agent": get_user_agents()}
     try:
         req = requests.get(url, headers=headers)
     except Exception:
         sys.exit()
 
-    soup = BeautifulSoup(req.content, "html.parser", from_encoding="utf-8")
+    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
 
-    table1_data = extract_data_from_table1(soup)
+    table1_data = extract_data_from_table1(soup, url)
     table2_data = extract_data_from_table2(soup)
 
     return table1_data, table2_data

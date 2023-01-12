@@ -70,16 +70,16 @@ def extract_data_from_table3(table):
     return dict(zip(keys, result))
 
 
-def scrape_ipostock(url):
+def scrape_ipostock(code):
     headers = {"User-Agent": get_user_agents()}
-
+    url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
     # request 통신 에러 발생시 시스템 종료
     try:
         req = requests.get(url, headers=headers)
     except Exception:
         sys.exit()
 
-    soup = BeautifulSoup(req.content, "html.parser", from_encoding="utf-8")
+    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
     table1 = soup.find("table", width="550", style="margin:0 auto;")
     table2, table3 = soup.select('table[width="780"][class="view_tb"]')
 
