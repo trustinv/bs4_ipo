@@ -35,7 +35,7 @@ def scrape_ipostock(code):
                 if math.isnan(value):
                     processed_value = value
                 else:
-                    processed_value = float(int(value / (10e7)))
+                    processed_value = round(value / (10e7), 2)
             else:
                 processed_value = value
             data_instance[key] = processed_value
@@ -47,9 +47,11 @@ if __name__ == "__main__":
     code = "B202010131"
     financial_result = scrape_ipostock(code)
     from pprint import pprint as pp
-    pp(financial_result[0])
+
     pp(financial_result[1])
-    pp(financial_result[2])
+    # pp(financial_result[0])
+    # pp(financial_result[1])
+    # pp(financial_result[2])
     # from schemas.financial import FinancialCreateSchema
 
     # s = [FinancialCreateSchema(**shareholder) for shareholder in financial_result]

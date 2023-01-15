@@ -17,7 +17,7 @@ class SubscriberBaseSchema(BaseModel):
 class SubscriberCreateSchema(SubscriberBaseSchema):
     @validator("ci_stock_firm", pre=True)
     def convert_ci_stock_firm(cls, value):
-        value = value[:2]
+        value = value.strip()
         return value
 
     @validator("ci_assign_quantity", pre=True)

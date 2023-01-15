@@ -2,12 +2,13 @@ import re
 
 
 def remove_whitespace(value):
-    return re.sub(r"\s", "", value)
+    value = re.sub(r"\s", "", value).replace("[", "").replace("]", "")
+    return value
 
 
 def none_to_empty_string(value):
-    value = value if value is not None else ""
-    return value.strip()
+    value = value.strip() if value is not None else ""
+    return value
 
 
 def extensions_to_string(value):
@@ -17,19 +18,15 @@ def extensions_to_string(value):
 
 
 def ci_list_type(value):
-    print(value)
     ci_list_type = "신규상장" if extensions_to_string(value) in ("코스닥", "유가증권") else "이전상장"
-    print("*" * 100)
-    print(ci_list_type)
     return ci_list_type
 
 
 def one_millon_won_to_float(value):
-    if not value.replace(",", "").replace("백만원", "").isnumeric():
+    value = value.replace(",", "").replace("백만원", "").strip()
+    if not value:
         return 0.0
-    value = re.sub(r"백만원", "", value)
-    value = value.replace(",", "")
-    return float(int(int(value) / 100))
+    return int(value) / 10e1
 
 
 def dot_dash_to_slash(value):
@@ -42,7 +39,7 @@ def dot_dash_to_slash(value):
 def month_to_int(value):
     if isinstance(value, int):
         return value
-    result = re.search(r"\d+", value).group()
+    value = re.search(r"\d+", value).group()
     return int(value)
 
 
@@ -64,11 +61,10 @@ def string_rate_to_percentage(value):
 
 
 def string_rate_to_float(value):
-    if not isinstance(value, float):
-        value = re.search(r"\d+", value).group()
-        value = float(value)
-        return value
-    return float(value)
+    if value:
+        value = value.replace(" ", "").replace("%", "")
+        return float(value)
+    return 0.0
 
 
 def ci_po_expected_amount(value):
@@ -94,9 +90,7 @@ def only_digits_to_float(value):
     if isinstance(value, str):
         if value == "":
             return 0.0
-        value = "".join(re.findall(r"\d+", value))
-        if value == "":
-            return 0.0
+        value = value.strip().replace(" ", "").replace("%", "")
         return float(value)
     return value
 

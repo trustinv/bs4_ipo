@@ -29,8 +29,6 @@ def extract_data_from_table1(soup, url):
 
         return result
     except AttributeError:
-        print("*" * 100)
-        print(url)
         result = [
             {
                 "ci_price": "",
@@ -44,17 +42,22 @@ def extract_data_from_table1(soup, url):
 
 
 def extract_data_from_table2(soup):
-    keys = ["ci_competition_rate", "ci_promise_content"]
-    results = []
     table = soup.find_all("table", width="780", cellspacing="1", class_="view_tb2")[-1]
-    trs = table.select("tr")
-    for tr in trs:
-        tds = tr.select("td")
-        for idx, td in enumerate(tds, 1):
-            if idx % 2 == 0:
-                results.append(td.text.strip())
-    results = dict(zip(keys, results))
-    return results
+    result = dict(
+        ci_competition_rate=table.select_one(
+            "tr:nth-of-type(1) > td:nth-of-type(2) > font > strong"
+        )
+        .get_text()
+        .replace(" ", "")
+        .replace("\xa0", ""),
+        ci_promise_content=table.select_one("tr:nth-of-type(2) > td:nth-of-type(2)")
+        .get_text()
+        .strip(),
+        ci_promise_rate=table.select_one("tr:nth-of-type(3) > td:nth-of-type(2)")
+        .get_text()
+        .strip(),
+    )
+    return result
 
 
 def scrape_ipostock(code):
@@ -71,16 +74,26 @@ def scrape_ipostock(code):
 
 
 if __name__ == "__main__":
-    url = "http://www.ipostock.co.kr/view_pg/view_05.asp?code=B202206162&gmenu="
-    prediction_result, general_result = scrape_ipostock(url)
+    code = "B202010131"
+    prediction_result, general_result = scrape_ipostock(code)
 
     from schemas.general import GeneralCreateSchema
     from schemas.prediction import PredictionCreateSchema
 
     g = GeneralCreateSchema(**general_result)
-    s = [PredictionCreateSchema(**data) for data in prediction_result]
+    s = [PredictionCreateSchema(**data) for data in prediction_result or []]
 
     from pprint import pprint as pp
 
     # pp(g.dict())
-    pp(s[0].dict())
+    # pp(g.dict()["ci_competition_rate"])
+    # pp(g.dict()["ci_promise_rate"])
+    # pp(g.dict()["ci_promise_content"])
+    si1 = s[0].dict()
+    si2 = s[1].dict()
+    si3 = s[2].dict()
+    si4 = s[3].dict()
+    print(si1)
+    # print(si2)
+    # print(si3)
+    # print(si4)

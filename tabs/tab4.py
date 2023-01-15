@@ -100,18 +100,22 @@ def scrape_ipostock(code):
 
 
 if __name__ == "__main__":
-    
+
     code = "B202010131"
     general_result, subscriber_results = scrape_ipostock(code)
     from pprint import pprint as pp
-    pp(subscriber_results)
-    # from schemas.general import GeneralCreateSchema
-    # from schemas.subscriber import SubscriberCreateSchema
 
-    # g = GeneralCreateSchema(**general_result)
+    # pp(subscriber_results)
+    from schemas.general import GeneralCreateSchema
+    from schemas.subscriber import SubscriberCreateSchema
+
+    g = GeneralCreateSchema(**general_result)
     # s = [SubscriberCreateSchema(**subscriber_result) for subscriber_result in subscriber_results]
 
-    # from pprint import pprint as pp
+    from pprint import pprint as pp
 
     # pp(g)
+    gi = g.dict()
+    print(gi["ci_demand_forecast_date"])
+    print(gi["ci_appraised_price"])
     # pp(s)

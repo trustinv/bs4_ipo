@@ -6,18 +6,29 @@ from pprint import pprint as pp
 from bs4 import BeautifulSoup
 from agents import get_user_agents
 
+
 def get_capital_n_stcks(table):
-    capital = table.select_one('td[width="*"]').get_text().split('억원')[0].strip()
-    stocks = table.select_one('tr:nth-of-type(2) td:nth-of-type(2)').get_text().strip().split('주')[0].strip().replace(',','')
+    capital = table.select_one('td[width="*"]').get_text().split("억원")[0].strip()
+    stocks = (
+        table.select_one("tr:nth-of-type(2) td:nth-of-type(2)")
+        .get_text()
+        .strip()
+        .split("주")[0]
+        .strip()
+        .replace(",", "")
+    )
     return capital, stocks
+
 
 def extract_data_from_table1(table):
     capital, stocks = get_capital_n_stcks(table)
-    return dict(ci_before_po_capital=capital,ci_before_po_stocks=stocks)
+    return dict(ci_before_po_capital=capital, ci_before_po_stocks=stocks)
+
 
 def extract_data_from_table2(table):
     capital, stocks = get_capital_n_stcks(table)
     return dict(ci_after_po_capital=capital, ci_after_po_stocks=stocks)
+
 
 def extract_data_from_table3(table, url):
     keys = [
@@ -68,23 +79,28 @@ def scrape_ipostock(code):
     table1_data = extract_data_from_table1(table1)
     table2_data = extract_data_from_table2(table2)
     table3_data = extract_data_from_table3(table3, url)
-    print(
-        # table1_data,
-        # table2_data,
-        table3_data
-    )
+
     return {**table1_data, **table2_data}, table3_data
 
 
 if __name__ == "__main__":
-    
+
     code = "B202010131"
     general_result, shareholder_results = scrape_ipostock(code)
-    # from schemas.general import GeneralCreateSchema
-    # from schemas.shareholder import ShareholderCreateSchema
+    from schemas.general import GeneralCreateSchema
+    from schemas.shareholder import ShareholderCreateSchema
 
-    # # pp(shareholder_result)
-    # g = GeneralCreateSchema(**general_result)
-    # s = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
+    # pp(shareholder_result)
+    pp(general_result)
+    g = GeneralCreateSchema(**general_result)
+    s = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
 
-    # pp(s)
+    # print("*" * 100)
+    # print(s, len(s))
+    pp(s[0].dict())
+    pp(s[1].dict())
+    pp(s[2].dict())
+    pp(s[3].dict())
+    pp(s[4].dict())
+    pp(s[5].dict())
+    pp(s[6].dict())

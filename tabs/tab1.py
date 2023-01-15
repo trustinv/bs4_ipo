@@ -7,14 +7,10 @@ from collections import ChainMap
 
 
 def extract_data_from_table1(table):
-    data2 = table.select_one('.view_tit').get_text()
-    data3 = table.select_one('.view_txt01').get_text()
-    data1 = table.select_one('img')['src']
-    return {
-        "ci_market_separation": data1,
-        "ci_name": data2,
-        "ci_code": data3
-    }
+    data2 = table.select_one(".view_tit").get_text()
+    data3 = table.select_one(".view_txt01").get_text()
+    data1 = table.select_one("img")["src"]
+    return {"ci_market_separation": data1, "ci_name": data2, "ci_code": data3}
 
 
 def extract_data_from_table2(table):
@@ -62,7 +58,6 @@ def extract_data_from_table3(table):
     tds = table.select('tr > td[width="240"]')
     result = [td.text if td.text is not None else "" for td in tds]
     result = dict(zip(keys, result))
-    print(result)
     return result
 
 
@@ -78,30 +73,33 @@ def scrape_ipostock(code):
     table2, table3 = soup.select('table[width="780"][class="view_tb"]')
     ci_face_value = int(soup.select_one('td[width="90"][align="right"]').text.split()[0])
 
-    ci_face_value = soup.select_one('td[width="90"][align="right"]').get_text().split('원')[0].strip()
+    ci_face_value = (
+        soup.select_one('td[width="90"][align="right"]').get_text().split("원")[0].strip()
+    )
+
     result = {
         "ci_face_value": ci_face_value,
         **extract_data_from_table1(table1),
         **extract_data_from_table2(table2),
         **extract_data_from_table3(table3),
     }
-    print(result)
     return result
 
 
 if __name__ == "__main__":
     # 바이오노트
     # code = "B202206162"
-    #래몽래인
+    # 래몽래인
     code = "B202010131"
     result = scrape_ipostock(code)
-    from schemas.general import GeneralCreateSchema
 
-    g = GeneralCreateSchema(**result)
-    from pprint import pprint as pp
+    # print(result["ci_public_offering_stocks"])
 
-    # print(result)
-    inst = g.dict()
-    pp(inst["ci_face_value"])
-    pp(inst["ci_settlement_month"])
-    pp(inst)
+    # from schemas.general import GeneralCreateSchema
+
+    # g = GeneralCreateSchema(**result)
+    # from pprint import pprint as pp
+
+    # inst = g.dict()
+    # pp(inst["ci_public_offering_stocks"])
+    # pp(inst["ci_public_offering_stocks"])

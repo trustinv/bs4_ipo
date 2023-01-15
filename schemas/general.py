@@ -62,7 +62,7 @@ class GeneralBase(BaseModel):
     ci_before_po_capital: float = 0.0
     ci_before_po_stocks: int = 0.0
     ci_after_po_capital: float = 0.0
-    ci_after_po_stocks: str = ""
+    ci_after_po_stocks: int = 0.0
     ci_most_subscription: str = ""
     ci_comment: str = ""
     ci_big_ir_plan: str = ""
@@ -185,10 +185,6 @@ class GeneralCreateSchema(GeneralBase):
     @validator("ci_listing_expected_stocks", pre=True)
     def convert_ci_listing_expected_stocks(cls, value):
         return converters.only_digits(value)
-
-    @validator("ci_after_po_stocks", pre=True)
-    def convert_ci_after_po_stocks(cls, value):
-        return converters.empty_string_to_float(value)
 
     @validator("ci_before_po_capital", pre=True)
     def conver_before_po_capital(cls, value):
@@ -315,11 +311,14 @@ class GeneralCreateSchema(GeneralBase):
         result = converters.dot_dash_to_slash(value)
         return result
 
+    @validator("ci_demand_forecast_date", pre=True)
+    def convert_ci_demand_forecast_date(cls, value):
+        result = converters.dot_dash_to_slash(value)
+        return result
+
     @validator("ci_competition_rate", pre=True)
     def convert_ci_competition_rate(cls, value):
-        value = re.sub(r"\s", "", value)
-        head = value.split(".")[0]
-        return f"{head}:1"
+        return value
 
     @validator("ci_po_expected_price", pre=True)
     def convert_ci_po_expected_price(cls, value):
