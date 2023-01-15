@@ -39,7 +39,6 @@ class PredictionCreateSchema(PredictionBaseSchema):
 
     @validator("ci_incidence_specific_gravity", pre=True)
     def convert_ci_incidence_specific_gravity(cls, value):
-        print(value)
         return converters.only_digits_to_float(value)
 
     @validator("ci_participation_specific_gravity", pre=True)
