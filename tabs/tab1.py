@@ -7,17 +7,14 @@ from collections import ChainMap
 
 
 def extract_data_from_table1(table):
-    td = table.select_one("tr > td")
-    img_src = td.select_one("img")
-    src = img_src.get("src", "")
-    ci_name = td.select_one(".view_tit")
-    ci_code = td.select_one(".view_txt01").text
-    result = {
-        "ci_market_separation": img_src.get("src", ""),
-        "ci_name": td.select_one(".view_tit").text,
-        "ci_code": td.select_one(".view_txt01").text,
+    data2 = table.select_one('.view_tit').get_text()
+    data3 = table.select_one('.view_txt01').get_text()
+    data1 = table.select_one('img')['src']
+    return {
+        "ci_market_separation": data1,
+        "ci_name": data2,
+        "ci_code": data3
     }
-    return result
 
 
 def extract_data_from_table2(table):
@@ -81,22 +78,23 @@ def scrape_ipostock(code):
     table2, table3 = soup.select('table[width="780"][class="view_tb"]')
     ci_face_value = int(soup.select_one('td[width="90"][align="right"]').text.split()[0])
 
+    ci_face_value = soup.select_one('td[width="90"][align="right"]').get_text().split('원')[0].strip()
     result = {
         "ci_face_value": ci_face_value,
         **extract_data_from_table1(table1),
         **extract_data_from_table2(table2),
         **extract_data_from_table3(table3),
     }
+    print(result)
     return result
 
 
 if __name__ == "__main__":
-    # 바이오 노트
+    # 바이오노트
     # code = "B202206162"
-    # 래몽래인
+    #래몽래인
     code = "B202010131"
     result = scrape_ipostock(code)
-
     from schemas.general import GeneralCreateSchema
 
     g = GeneralCreateSchema(**result)

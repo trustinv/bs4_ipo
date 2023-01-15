@@ -6,46 +6,18 @@ from pprint import pprint as pp
 from bs4 import BeautifulSoup
 from agents import get_user_agents
 
+def get_capital_n_stcks(table):
+    capital = table.select_one('td[width="*"]').get_text().split('억원')[0].strip()
+    stocks = table.select_one('tr:nth-of-type(2) td:nth-of-type(2)').get_text().strip().split('주')[0].strip().replace(',','')
+    return capital, stocks
 
 def extract_data_from_table1(table):
-    keys = [
-        "ci_before_po_capital",
-        "ci_before_po_stocks",
-    ]
-    temp = []
-    tds = table.select("td")
-    pattern = r"\d+[,.]\d+|\d+"
-
-    raw_data = tds[-3:]
-
-    for item in raw_data:
-        text_data = item.text
-        match = re.search(pattern, text_data)
-        if match:
-            temp.append(match.group())
-    result = dict(zip(keys, temp))
-    return result
-
+    capital, stocks = get_capital_n_stcks(table)
+    return dict(ci_before_po_capital=capital,ci_before_po_stocks=stocks)
 
 def extract_data_from_table2(table):
-    keys = [
-        "ci_after_po_capital",
-        "ci_after_po_stocks",
-    ]
-    temp = []
-    tds = table.select("td")
-    pattern = r"\d+[,.]\d+|\d+"
-
-    raw_data = tds[-3:]
-
-    for item in raw_data:
-        text_data = item.text
-        match = re.search(pattern, text_data)
-        if match:
-            temp.append(match.group())
-    result = dict(zip(keys, temp))
-    return result
-
+    capital, stocks = get_capital_n_stcks(table)
+    return dict(ci_after_po_capital=capital, ci_after_po_stocks=stocks)
 
 def extract_data_from_table3(table, url):
     keys = [
@@ -96,18 +68,23 @@ def scrape_ipostock(code):
     table1_data = extract_data_from_table1(table1)
     table2_data = extract_data_from_table2(table2)
     table3_data = extract_data_from_table3(table3, url)
-
+    print(
+        # table1_data,
+        # table2_data,
+        table3_data
+    )
     return {**table1_data, **table2_data}, table3_data
 
 
 if __name__ == "__main__":
-    url = "http://www.ipostock.co.kr/view_pg/view_02.asp?code=B202206162&gmenu="
-    general_result, shareholder_results = scrape_ipostock(url)
-    from schemas.general import GeneralCreateSchema
-    from schemas.shareholder import ShareholderCreateSchema
+    
+    code = "B202010131"
+    general_result, shareholder_results = scrape_ipostock(code)
+    # from schemas.general import GeneralCreateSchema
+    # from schemas.shareholder import ShareholderCreateSchema
 
-    # pp(shareholder_result)
-    g = GeneralCreateSchema(**general_result)
-    s = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
+    # # pp(shareholder_result)
+    # g = GeneralCreateSchema(**general_result)
+    # s = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
 
-    pp(s)
+    # pp(s)

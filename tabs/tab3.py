@@ -22,7 +22,7 @@ def scrape_ipostock(code):
     df = pd.read_html(url)
     df1 = df[21]
     df1 = df1[~df1[0].isin(["자산총계", "부채총계", "자본총계"])]
-    df1 = df[21].iloc[:, 1:4]
+    df1 = df1.iloc[:, 1:4]
     df_str = df1.iloc[:2, :]
     df2 = df1.loc[2:, :].astype("float")
     result = pd.concat([df_str, df2])
@@ -44,9 +44,13 @@ def scrape_ipostock(code):
 
 
 if __name__ == "__main__":
-    url = "http://www.ipostock.co.kr/view_pg/view_03.asp?code=B202206162&gmenu="
-    financial_result = scrape_ipostock(url)
-    from schemas.financial import FinancialCreateSchema
+    code = "B202010131"
+    financial_result = scrape_ipostock(code)
+    from pprint import pprint as pp
+    pp(financial_result[0])
+    pp(financial_result[1])
+    pp(financial_result[2])
+    # from schemas.financial import FinancialCreateSchema
 
-    s = [FinancialCreateSchema(**shareholder) for shareholder in financial_result]
-    print(s)
+    # s = [FinancialCreateSchema(**shareholder) for shareholder in financial_result]
+    # print(s)

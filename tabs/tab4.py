@@ -100,15 +100,18 @@ def scrape_ipostock(code):
 
 
 if __name__ == "__main__":
-    url = "http://www.ipostock.co.kr/view_pg/view_04.asp?code=B202206162&gmenu="
-    general_result, subscriber_results = scrape_ipostock(url)
-    from schemas.general import GeneralCreateSchema
-    from schemas.subscriber import SubscriberCreateSchema
-
-    g = GeneralCreateSchema(**general_result)
-    s = [SubscriberCreateSchema(**subscriber_result) for subscriber_result in subscriber_results]
-
+    
+    code = "B202010131"
+    general_result, subscriber_results = scrape_ipostock(code)
     from pprint import pprint as pp
+    pp(subscriber_results)
+    # from schemas.general import GeneralCreateSchema
+    # from schemas.subscriber import SubscriberCreateSchema
 
-    pp(g)
-    pp(s)
+    # g = GeneralCreateSchema(**general_result)
+    # s = [SubscriberCreateSchema(**subscriber_result) for subscriber_result in subscriber_results]
+
+    # from pprint import pprint as pp
+
+    # pp(g)
+    # pp(s)
