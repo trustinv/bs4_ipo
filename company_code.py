@@ -20,7 +20,10 @@ def scrape_company_codes(year=2021):
         while page_data is None:
             url = f"http://www.ipostock.co.kr/sub03/ipo02.asp?str4={year}&str5=all&page={page}"
             page += 1
-            req = requests.get(url, headers={"User-Agent": get_user_agents()})
+
+            from utilities import request_helper
+
+            req = request_helper.requests_retry_session().get(url, timeout=5)
             soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
 
             page_data = soup.select_one('td[colspan="9"]')

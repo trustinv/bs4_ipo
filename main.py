@@ -10,30 +10,17 @@ from schemas.financial import FinancialCreateSchema
 from schemas.shareholder import ShareholderCreateSchema
 from schemas.prediction import PredictionCreateSchema
 
-
-def scrape_categories():
-    # request 통신 에러 발생시 시스템 종료
-    try:
-        req = requests.get(url, headers={"User-Agent": get_user_agents()})
-    except Exception:
-        sys.exit()
-
-    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
-
-
 if __name__ == "__main__":
     import a_tags
     import settings
     import company_code
+    import time
 
     count = 0
-
-    company_codes = company_code.scrape_company_codes()
-
     url = f"{settings.IPO_URL}/view_pg"
     company_codes = company_code.scrape_company_codes()
 
-    for code in company_codes[0:1]:
+    for code in company_codes:
         general_result = {}
 
         categories = a_tags.scrape_categories(url, code)
@@ -69,14 +56,14 @@ if __name__ == "__main__":
         predictions = [
             PredictionCreateSchema(**prediction) for prediction in prediction_results or []
         ]
-        from pprint import pprint as pp
+        # from pprint import pprint as pp
 
-        print(
-            general,
-            shareholders,
-            subscribers,
-            financials,
-            predictions,
-        )
+        # print(
+        #     general,
+        #     shareholders,
+        #     subscribers,
+        #     financials,
+        #     predictions,
+        # )
         count += 1
         print(count)

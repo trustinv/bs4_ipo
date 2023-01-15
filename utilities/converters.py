@@ -17,7 +17,10 @@ def extensions_to_string(value):
 
 
 def ci_list_type(value):
+    print(value)
     ci_list_type = "신규상장" if extensions_to_string(value) in ("코스닥", "유가증권") else "이전상장"
+    print("*" * 100)
+    print(ci_list_type)
     return ci_list_type
 
 
@@ -84,7 +87,7 @@ def only_digits_to_int(value):
         value = "".join(re.findall(r"\d+", value))
         if value == "":
             return 0
-    return 0
+    return value
 
 
 def only_digits_to_float(value):

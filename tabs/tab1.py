@@ -7,22 +7,17 @@ from collections import ChainMap
 
 
 def extract_data_from_table1(table):
-    keys = [
-        "ci_market_separation",
-        "ci_name",
-        "ci_code",
-    ]
-    result = []
-    trs = table.select("tr")
-    for tds in trs:
-        for idx, td in enumerate(tds):
-            name = td.text
-            img_tag = td.find("img")
-            if img_tag is not None and img_tag != -1:
-                img_tag = img_tag["src"]
-                name, code = name.strip().split("\n")
-                result.extend((img_tag, name, code))
-    return dict(zip(keys, result))
+    td = table.select_one("tr > td")
+    img_src = td.select_one("img")
+    src = img_src.get("src", "")
+    ci_name = td.select_one(".view_tit")
+    ci_code = td.select_one(".view_txt01").text
+    result = {
+        "ci_market_separation": img_src.get("src", ""),
+        "ci_name": td.select_one(".view_tit").text,
+        "ci_code": td.select_one(".view_txt01").text,
+    }
+    return result
 
 
 def extract_data_from_table2(table):
@@ -47,7 +42,9 @@ def extract_data_from_table2(table):
     for idx_tr, tr in enumerate(trs):
         tds = tr.select("td.txt")
         result.extend(td.text if td.text is not None else "" for td in tds)
-    return dict(zip(keys, result))
+    result = dict(zip(keys, result))
+    # print(result)
+    return result
 
 
 def extract_data_from_table3(table):
@@ -67,23 +64,25 @@ def extract_data_from_table3(table):
     ]
     tds = table.select('tr > td[width="240"]')
     result = [td.text if td.text is not None else "" for td in tds]
-    return dict(zip(keys, result))
+    result = dict(zip(keys, result))
+    print(result)
+    return result
 
 
 def scrape_ipostock(code):
-    headers = {"User-Agent": get_user_agents()}
-    url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
-    # request 통신 에러 발생시 시스템 종료
-    try:
-        req = requests.get(url, headers=headers)
-    except Exception:
-        sys.exit()
 
+    url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
+
+    from utilities import request_helper
+
+    req = request_helper.requests_retry_session().get(url, timeout=5)
     soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
     table1 = soup.find("table", width="550", style="margin:0 auto;")
     table2, table3 = soup.select('table[width="780"][class="view_tb"]')
+    ci_face_value = int(soup.select_one('td[width="90"][align="right"]').text.split()[0])
 
     result = {
+        "ci_face_value": ci_face_value,
         **extract_data_from_table1(table1),
         **extract_data_from_table2(table2),
         **extract_data_from_table3(table3),
@@ -92,11 +91,19 @@ def scrape_ipostock(code):
 
 
 if __name__ == "__main__":
-    url = "http://www.ipostock.co.kr/view_pg/view_01.asp?code=B202206162&gmenu="
-    result = scrape_ipostock(url)
+    # 바이오 노트
+    # code = "B202206162"
+    # 래몽래인
+    code = "B202010131"
+    result = scrape_ipostock(code)
+
     from schemas.general import GeneralCreateSchema
 
     g = GeneralCreateSchema(**result)
     from pprint import pprint as pp
 
-    pp(g)
+    # print(result)
+    inst = g.dict()
+    pp(inst["ci_face_value"])
+    pp(inst["ci_settlement_month"])
+    pp(inst)

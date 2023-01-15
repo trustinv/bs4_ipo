@@ -321,6 +321,10 @@ class GeneralCreateSchema(GeneralBase):
         head = value.split(".")[0]
         return f"{head}:1"
 
+    @validator("ci_po_expected_price", pre=True)
+    def convert_ci_po_expected_price(cls, value):
+        return ""
+
 
 class GeneralSchema(GeneralBase):
     ci_idx: int

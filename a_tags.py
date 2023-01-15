@@ -7,13 +7,10 @@ from agents import get_user_agents
 
 def scrape_categories(url, code=None):
 
-    try:
+    url = f"{url}/view_01.asp?code={code}"
+    from utilities import request_helper
 
-        req = requests.get(
-            url=f"{url}/view_01.asp?code={code}", headers={"User-Agent": get_user_agents()}
-        )
-    except Exception:
-        sys.exit()
+    req = request_helper.requests_retry_session().get(url, timeout=5)
     soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
 
     category_path = [a.get("href") for a in soup.find_all("a", href=re.compile("view_0[1-5]"))]

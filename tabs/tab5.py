@@ -59,14 +59,11 @@ def extract_data_from_table2(soup):
 
 def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_05.asp?code={code}"
-    headers = {"User-Agent": get_user_agents()}
-    try:
-        req = requests.get(url, headers=headers)
-    except Exception:
-        sys.exit()
 
+    from utilities import request_helper
+
+    req = request_helper.requests_retry_session().get(url, timeout=5)
     soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
-
     table1_data = extract_data_from_table1(soup, url)
     table2_data = extract_data_from_table2(soup)
 

@@ -11,16 +11,6 @@ from schemas.shareholder import ShareholderCreateSchema
 from schemas.prediction import PredictionCreateSchema
 
 
-def scrape_categories():
-    # request 통신 에러 발생시 시스템 종료
-    try:
-        req = requests.get(url, headers={"User-Agent": get_user_agents()})
-    except Exception:
-        sys.exit()
-
-    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
-
-
 if __name__ == "__main__":
     import a_tags
     import settings

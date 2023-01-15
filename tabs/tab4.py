@@ -86,13 +86,9 @@ def extract_data_from_table4(table):
 
 def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_04.asp?code={code}"
-    headers = {"User-Agent": get_user_agents()}
+    from utilities import request_helper
 
-    try:
-        req = requests.get(url, headers=headers)
-    except Exception:
-        sys.exit()
-
+    req = request_helper.requests_retry_session().get(url, timeout=5)
     soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
     table1, table2, table3, table4, *_ = soup.select("table.view_tb")
 
