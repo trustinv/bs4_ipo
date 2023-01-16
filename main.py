@@ -56,14 +56,5 @@ if __name__ == "__main__":
         predictions = [
             PredictionCreateSchema(**prediction) for prediction in prediction_results or []
         ]
-        # from pprint import pprint as pp
-
-        # print(
-        #     general,
-        #     shareholders,
-        #     subscribers,
-        #     financials,
-        #     predictions,
-        # )
         count += 1
         print(count, code)

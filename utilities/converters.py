@@ -95,12 +95,14 @@ def only_digits_to_int(value):
 
 def only_digits_to_float(value):
     if isinstance(value, str):
-        if value == "":
-            return 0.0
         value = (value := value.strip().replace(" ", "").replace("%", "")) if value != "" else 0.0
+        if value is None or value == "":
+            return 0.0
         return float(value)
-    else :
-        if float()
+    elif value is None:
+        return 0.0
+    elif isinstance(value, float):
+        return float(value)
 
 
 def empty_string_to_float(value):

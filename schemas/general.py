@@ -167,7 +167,6 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_turnover", pre=True)
     def convert_ci_turnover(cls, value):
-        print(value)
         if "백만원" in value:
             return converters.one_millon_won_to_float(value)
         elif "원" in value:
@@ -178,7 +177,6 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_before_corporate_tax", pre=True)
     def convert_ci_before_corporate_tax(cls, value):
-        print(value)
         if "백만원" in value:
             return converters.one_millon_won_to_float(value)
         elif "원" in value:
@@ -189,7 +187,6 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_net_profit", pre=True)
     def convert_ci_net_profit(cls, value):
-        print(value)
         if "백만원" in value:
             return converters.one_millon_won_to_float(value)
         elif "원" in value:
@@ -200,7 +197,6 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_capital", pre=True)
     def convert_ci_capital(cls, value):
-        print(value)
         if "백만원" in value:
             return converters.one_millon_won_to_float(value)
         elif "원" in value:

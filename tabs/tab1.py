@@ -47,7 +47,6 @@ def extract_data_from_table2(table):
         tds = tr.select("td.txt")
         result.extend(td.text if td.text is not None else "" for td in tds)
     result = dict(zip(keys, result))
-    # print(result)
     return result
 
 
