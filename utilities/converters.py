@@ -1,4 +1,5 @@
 import re
+import pydantic
 
 
 def remove_whitespace(value):
@@ -51,6 +52,7 @@ def worker_to_int(value):
 
 
 def string_rate_to_percentage(value):
+    # DB컬럼 타입 integer에 해당
     if not isinstance(value, float):
         match = re.search(r"\d+", value)
         if match is None:
@@ -61,10 +63,15 @@ def string_rate_to_percentage(value):
 
 
 def string_rate_to_float(value):
-    if value:
+    # try:
+    if isinstance(value, str) and value:
         value = value.replace(" ", "").replace("%", "")
+        if not value.isnumeric():
+            return 0.0
         return float(value)
     return 0.0
+    # except pydantic.ValidationError:
+    #     return 0.0
 
 
 def ci_po_expected_amount(value):
@@ -110,7 +117,7 @@ def string_percentage_to_float(value):
 def string_capital_to_float(value):
     if isinstance(value, float) or isinstance(value, int):
         return value
-    return float(re.sub(r"[^\d]", "", value))
+    return float(value)
 
 
 def string_stocks_to_int(value):

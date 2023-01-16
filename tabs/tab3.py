@@ -33,9 +33,9 @@ def scrape_ipostock(code):
         for key, value in zip(keys, data_row):
             if isinstance(value, float):
                 if math.isnan(value):
-                    processed_value = value
+                    processed_value = format(value, ".2f")
                 else:
-                    processed_value = round(value / (10e7), 2)
+                    processed_value = format(value / (10e7), ".2f")
             else:
                 processed_value = value
             data_instance[key] = processed_value

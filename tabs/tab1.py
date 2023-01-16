@@ -6,6 +6,17 @@ from agents import get_user_agents
 from collections import ChainMap
 
 
+def face_value(soup):
+    ci_face_value = None
+    tds = soup.select('table[width="390"] td')
+    for idx, td in enumerate(tds):
+        font = td.select_one("font")
+        if font and font.get_text() == "액면가":
+            ci_face_value = tds[idx + 1].get_text().split("원")[0].strip()
+            break
+    return ci_face_value or "0"
+
+
 def extract_data_from_table1(table):
     data2 = table.select_one(".view_tit").get_text()
     data3 = table.select_one(".view_txt01").get_text()
@@ -63,6 +74,8 @@ def extract_data_from_table3(table):
 
 def scrape_ipostock(code):
 
+    # # 블루포인트
+    # code = "B202008032"
     url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
 
     from utilities import request_helper
@@ -71,14 +84,9 @@ def scrape_ipostock(code):
     soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
     table1 = soup.find("table", width="550", style="margin:0 auto;")
     table2, table3 = soup.select('table[width="780"][class="view_tb"]')
-    ci_face_value = int(soup.select_one('td[width="90"][align="right"]').text.split()[0])
-
-    ci_face_value = (
-        soup.select_one('td[width="90"][align="right"]').get_text().split("원")[0].strip()
-    )
 
     result = {
-        "ci_face_value": ci_face_value,
+        "ci_face_value": face_value(soup),
         **extract_data_from_table1(table1),
         **extract_data_from_table2(table2),
         **extract_data_from_table3(table3),
@@ -90,16 +98,18 @@ if __name__ == "__main__":
     # 바이오노트
     # code = "B202206162"
     # 래몽래인
-    code = "B202010131"
+    # code = "B202010131"
+    # 한국제10호스팩
+    code = "B202111241"
     result = scrape_ipostock(code)
 
     # print(result["ci_public_offering_stocks"])
 
-    # from schemas.general import GeneralCreateSchema
+    from schemas.general import GeneralCreateSchema
 
-    # g = GeneralCreateSchema(**result)
-    # from pprint import pprint as pp
+    g = GeneralCreateSchema(**result)
+    from pprint import pprint as pp
 
-    # inst = g.dict()
-    # pp(inst["ci_public_offering_stocks"])
+    inst = g.dict()
+    pp(inst["ci_face_value"])
     # pp(inst["ci_public_offering_stocks"])

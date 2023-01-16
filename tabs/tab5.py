@@ -41,23 +41,32 @@ def extract_data_from_table1(soup, url):
         return result
 
 
-def extract_data_from_table2(soup):
-    table = soup.find_all("table", width="780", cellspacing="1", class_="view_tb2")[-1]
-    result = dict(
-        ci_competition_rate=table.select_one(
-            "tr:nth-of-type(1) > td:nth-of-type(2) > font > strong"
+def extract_data_from_table2(soup, url):
+    try:
+        table = soup.find_all("table", width="780", cellspacing="1", class_="view_tb2")[-1]
+        result = dict(
+            ci_competition_rate=table.select_one(
+                "tr:nth-of-type(1) > td:nth-of-type(2) > font > strong"
+            )
+            .get_text()
+            .replace(" ", "")
+            .replace("\xa0", ""),
+            ci_promise_content=table.select_one("tr:nth-of-type(2) > td:nth-of-type(2)")
+            .get_text()
+            .strip(),
+            ci_promise_rate=table.select_one("tr:nth-of-type(3) > td:nth-of-type(2)")
+            .get_text()
+            .strip(),
         )
-        .get_text()
-        .replace(" ", "")
-        .replace("\xa0", ""),
-        ci_promise_content=table.select_one("tr:nth-of-type(2) > td:nth-of-type(2)")
-        .get_text()
-        .strip(),
-        ci_promise_rate=table.select_one("tr:nth-of-type(3) > td:nth-of-type(2)")
-        .get_text()
-        .strip(),
-    )
-    return result
+        return result
+    except AttributeError:
+        # 해당 테이블이 존재하지 않을 경우 기본 값으로 데이터를 넘겨줌.
+        result = {
+            "ci_competition_rate": "",
+            "ci_promise_content": "",
+            "ci_promise_rate": 0.0,
+        }
+        return result
 
 
 def scrape_ipostock(code):
@@ -68,7 +77,7 @@ def scrape_ipostock(code):
     req = request_helper.requests_retry_session().get(url, timeout=5)
     soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
     table1_data = extract_data_from_table1(soup, url)
-    table2_data = extract_data_from_table2(soup)
+    table2_data = extract_data_from_table2(soup, url)
 
     return table1_data, table2_data
 

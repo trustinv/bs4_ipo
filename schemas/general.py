@@ -83,13 +83,13 @@ class GeneralBase(BaseModel):
     ci_attractiveness_score: int = 0
     ci_public_offering_stocks: str = ""
     ci_professional_investor_stock: int = 0
-    ci_professional_investor_rate: float = 0.0
+    ci_professional_investor_rate: int = 0
     ci_esa_stock: int = 0
-    ci_esa_rate: float = 0.0
+    ci_esa_rate: int = 0
     ci_general_subscriber_stock: int = 0
-    ci_general_subscriber_rate: float = 0.0
+    ci_general_subscriber_rate: int = 0
     ci_overseas_investor_stock: int = 0
-    ci_overseas_investor_rate: float = 0.0
+    ci_overseas_investor_rate: int = 0
     ci_noted_items: str = ""
     ci_noted_items_check: str = ""
     ci_guidelines: str = ""
@@ -136,11 +136,11 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_review_c_date", pre=True)
     def convert_ci_review_c_date(cls, value):
-        return converters.dot_dash_to_slash(value)
+        return value.strip()
 
     @validator("ci_review_a_date", pre=True)
     def convert_ci_review_a_date(cls, value):
-        return converters.dot_dash_to_slash(value)
+        return value.strip()
 
     @validator("ci_establishment_date", pre=True)
     def convert_ci_establishment_date(cls, value):
@@ -234,8 +234,8 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_professional_investor_rate", pre=True)
     def convert_ci_professional_investor_rate(cls, value):
-        value = converters.string_rate_to_percentage(value)
-        return value
+        value = value.strip().replace(" ", "").split("%")[0]
+        return int(value)
 
     @validator("ci_esa_stock", pre=True)
     def convert_ci_esa_stock(cls, value):
@@ -244,8 +244,8 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_esa_rate", pre=True)
     def convert_ci_esa_rate(cls, value):
-        value = converters.string_rate_to_percentage(value)
-        return value
+        value = value.strip().replace(" ", "").split("%")[0]
+        return int(value)
 
     @validator("ci_general_subscriber_stock", pre=True)
     def convert_ci_general_subscriber_stock(cls, value):
@@ -254,8 +254,8 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_general_subscriber_rate", pre=True)
     def convert_ci_general_subscriber_rate(cls, value):
-        value = converters.string_rate_to_percentage(value)
-        return value
+        value = value.strip().replace(" ", "").split("%")[0]
+        return int(value)
 
     @validator("ci_overseas_investor_stock", pre=True)
     def convert_ci_overseas_investor_stock(cls, value):
@@ -264,19 +264,19 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_overseas_investor_rate", pre=True)
     def convert_ci_overseas_investor_rate(cls, value):
-        value = converters.string_rate_to_percentage(value)
-        return value
+        value = value.strip().replace(" ", "").split("%")[0]
+        return int(value)
 
     @validator("ci_hope_po_price", pre=True)
     def convert_ci_hope_po_price(cls, value):
         string_value = converters.range_of_digits(value)
-        value = string_value.strip()
+        value = string_value.strip().replace(" ", "")
         return value
 
     @validator("ci_hope_po_amount", pre=True)
     def convert_ci_hope_po_amount(cls, value):
         string_value = converters.range_of_digits(value)
-        value = string_value.strip()
+        value = string_value.strip().replace(" ", "")
         return value
 
     @validator("ci_subscription_competition_rate", pre=True)
