@@ -126,6 +126,17 @@ class GeneralBase(BaseModel):
 
 
 class GeneralCreateSchema(GeneralBase):
+    @validator("ci_face_value", pre=True)
+    def validate_ci_face_value(cls, value):
+        if isinstance(value, str):
+            if value.isnumeric():
+                value = int(value)
+                return value
+            else:
+                value = value.replace("원", "").strip()
+                return int(value)
+        return None
+
     @validator("ci_market_separation", pre=True)
     def validate_ci_market_separation(cls, value):
         return converters.extensions_to_string(value)
@@ -156,19 +167,47 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_turnover", pre=True)
     def convert_ci_turnover(cls, value):
-        return converters.one_millon_won_to_float(value)
+        print(value)
+        if "백만원" in value:
+            return converters.one_millon_won_to_float(value)
+        elif "원" in value:
+            value = int(value.split("원")[0].strip())
+            return value
+        elif value is None or "" == value:
+            return 0.0
 
     @validator("ci_before_corporate_tax", pre=True)
     def convert_ci_before_corporate_tax(cls, value):
-        return converters.one_millon_won_to_float(value)
+        print(value)
+        if "백만원" in value:
+            return converters.one_millon_won_to_float(value)
+        elif "원" in value:
+            value = float(value.split("원")[0].strip())
+            return value
+        elif value is None or value == "":
+            return 0.0
 
     @validator("ci_net_profit", pre=True)
     def convert_ci_net_profit(cls, value):
-        return converters.one_millon_won_to_float(value)
+        print(value)
+        if "백만원" in value:
+            return converters.one_millon_won_to_float(value)
+        elif "원" in value:
+            value = float(value.split("원")[0].strip())
+            return value
+        elif value is None or "" == value:
+            return 0
 
     @validator("ci_capital", pre=True)
     def convert_ci_capital(cls, value):
-        return converters.one_millon_won_to_float(value)
+        print(value)
+        if "백만원" in value:
+            return converters.one_millon_won_to_float(value)
+        elif "원" in value:
+            value = int(value.split("원")[0].strip())
+            return value
+        elif value is None or "" == value:
+            return 0
 
     @validator("ci_largest_shareholder_rate", pre=True)
     def convert_ci_largest_shareholder_rate(cls, value):
@@ -234,7 +273,7 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_professional_investor_rate", pre=True)
     def convert_ci_professional_investor_rate(cls, value):
-        value = value.strip().replace(" ", "").split("%")[0]
+        value = value.split("%")[0].replace(".", "").strip()
         return int(value)
 
     @validator("ci_esa_stock", pre=True)
@@ -244,7 +283,7 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_esa_rate", pre=True)
     def convert_ci_esa_rate(cls, value):
-        value = value.strip().replace(" ", "").split("%")[0]
+        value = value.split("%")[0].strip().replace(" ", "").replace(".", "")
         return int(value)
 
     @validator("ci_general_subscriber_stock", pre=True)
@@ -254,7 +293,7 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_general_subscriber_rate", pre=True)
     def convert_ci_general_subscriber_rate(cls, value):
-        value = value.strip().replace(" ", "").split("%")[0]
+        value = value.strip().replace(".", "").replace(" ", "").split("%")[0]
         return int(value)
 
     @validator("ci_overseas_investor_stock", pre=True)
@@ -264,7 +303,7 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_overseas_investor_rate", pre=True)
     def convert_ci_overseas_investor_rate(cls, value):
-        value = value.strip().replace(" ", "").split("%")[0]
+        value = value.strip().replace(" ", "").replace(".", "").split("%")[0]
         return int(value)
 
     @validator("ci_hope_po_price", pre=True)

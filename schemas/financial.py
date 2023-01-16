@@ -43,6 +43,10 @@ class FinancialCreateSchema(FinancialBaseSchema):
 
     @validator("ci_capital", pre=True)
     def convert_ci_capital(cls, value):
+        if value == "0\xa0원":
+            return 0.0
+        else:
+            value = float(value.split("원")[0].replace("\xa0", "").replace(" ", "").strip())
         return value
 
     @validator("ci_capital_surplus", pre=True)

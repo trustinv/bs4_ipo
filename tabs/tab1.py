@@ -12,7 +12,7 @@ def face_value(soup):
     for idx, td in enumerate(tds):
         font = td.select_one("font")
         if font and font.get_text() == "액면가":
-            ci_face_value = tds[idx + 1].get_text().split("원")[0].strip()
+            ci_face_value = tds[idx + 1].get_text().replace("원", "").replace(",", "").strip()
             break
     return ci_face_value or "0"
 
@@ -76,6 +76,7 @@ def scrape_ipostock(code):
 
     # # 블루포인트
     # code = "B202008032"
+    code = "B201509242"
     url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
 
     from utilities import request_helper

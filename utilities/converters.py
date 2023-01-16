@@ -97,9 +97,10 @@ def only_digits_to_float(value):
     if isinstance(value, str):
         if value == "":
             return 0.0
-        value = value.strip().replace(" ", "").replace("%", "")
+        value = (value := value.strip().replace(" ", "").replace("%", "")) if value != "" else 0.0
         return float(value)
-    return value
+    else :
+        if float()
 
 
 def empty_string_to_float(value):
@@ -115,9 +116,13 @@ def string_percentage_to_float(value):
 
 
 def string_capital_to_float(value):
-    if isinstance(value, float) or isinstance(value, int):
+    if value is None:
+        return 0.0
+    elif isinstance(value, float) or isinstance(value, int):
         return value
-    return float(value)
+    elif (value := value.replace(",", "").strip()) is not None and "" != value:
+        value = float(value.replace(",", "").strip())
+    return value
 
 
 def string_stocks_to_int(value):
