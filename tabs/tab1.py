@@ -72,10 +72,6 @@ def extract_data_from_table3(table):
 
 
 def scrape_ipostock(code):
-
-    # # 블루포인트
-    # code = "B202008032"
-    code = "B201509242"
     url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
 
     from utilities import request_helper

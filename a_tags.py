@@ -23,7 +23,7 @@ def scrape_categories(url, code=None):
 
 if __name__ == "__main__":
 
-    code = "B202206162"
+    code = "B202010131"
     url = "http://www.ipostock.co.kr/view_pg"
     category_nums = scrape_categories(url, code)
     print(category_nums)
