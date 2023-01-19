@@ -1,4 +1,5 @@
 import re
+import string
 from typing import List
 from datetime import datetime
 
@@ -58,7 +59,7 @@ class GeneralBase(BaseModel):
     ci_po_expected_price: str = ""
     ci_po_expected_stocks: int = 0
     ci_po_expected_amount: str = ""
-    ci_listing_expected_stocks: str = ""
+    ci_listing_expected_stocks: int = 0
     ci_before_po_capital: float = 0.0
     ci_before_po_stocks: int = 0.0
     ci_after_po_capital: float = 0.0
@@ -167,43 +168,19 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_turnover", pre=True)
     def convert_ci_turnover(cls, value):
-        if "백만원" in value:
-            return converters.one_millon_won_to_float(value)
-        elif "원" in value:
-            value = int(value.split("원")[0].strip())
-            return value
-        elif value is None or "" == value:
-            return 0.0
+        return converters.change_currency(value)
 
     @validator("ci_before_corporate_tax", pre=True)
     def convert_ci_before_corporate_tax(cls, value):
-        if "백만원" in value:
-            return converters.one_millon_won_to_float(value)
-        elif "원" in value:
-            value = float(value.split("원")[0].strip())
-            return value
-        elif value is None or value == "":
-            return 0.0
+        return converters.change_currency(value)
 
     @validator("ci_net_profit", pre=True)
     def convert_ci_net_profit(cls, value):
-        if "백만원" in value:
-            return converters.one_millon_won_to_float(value)
-        elif "원" in value:
-            value = float(value.split("원")[0].strip())
-            return value
-        elif value is None or "" == value:
-            return 0
+        return converters.change_currency(value)
 
     @validator("ci_capital", pre=True)
     def convert_ci_capital(cls, value):
-        if "백만원" in value:
-            return converters.one_millon_won_to_float(value)
-        elif "원" in value:
-            value = int(value.split("원")[0].strip())
-            return value
-        elif value is None or "" == value:
-            return 0
+        return converters.change_currency(value)
 
     @validator("ci_largest_shareholder_rate", pre=True)
     def convert_ci_largest_shareholder_rate(cls, value):
@@ -219,7 +196,11 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_listing_expected_stocks", pre=True)
     def convert_ci_listing_expected_stocks(cls, value):
-        return converters.only_digits(value)
+        result = converters.only_digits(value).strip()
+        result = result.strip()
+        if result is None or result in string.whitespace:
+            return 0
+        return int(result)
 
     @validator("ci_before_po_capital", pre=True)
     def conver_before_po_capital(cls, value):

@@ -164,7 +164,7 @@ class CompanyInfoPrediction(Base):
     ci_price = Column(String(255), comment="가격")
     ci_incidence = Column(INTEGER(11), comment="건수")
     ci_incidence_specific_gravity = Column(Float(asdecimal=True), comment="건수비중")
-    ci_participation = Column(INTEGER(11), comment="참여수량")
+    ci_participation = Column(BIGINT, comment="참여수량")
     ci_participation_specific_gravity = Column(Float(asdecimal=True), comment="참여수량비중")
     ci_datetime = Column(DateTime, server_default=text("'0000-00-00 00:00:00'"))
 

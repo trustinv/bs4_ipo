@@ -1,5 +1,30 @@
 import re
-import pydantic
+import string
+
+
+def change_currency(value):
+    million_won = "백만원"
+    won = "원"
+    dollor = "$"
+    if "백만원" in value:
+        result = one_millon_won_to_float(value)
+        return result
+    elif won in value:
+        value = won_to_float(value)
+        return value
+    elif dollor in value:
+        value = dollar_to_float(value)
+        return value
+    elif value is None or value == "":
+        return 0
+    else:
+        if isinstance(value, str):
+            result = value.strip()
+            if result in string.whitespace:
+                return 0.0
+            else:
+                print("ㅇㅕㄱㅣ ㅁㅓ")
+                print(result, type(result))
 
 
 def remove_whitespace(value):
@@ -27,7 +52,27 @@ def one_millon_won_to_float(value):
     value = value.replace(",", "").replace("백만원", "").strip()
     if not value:
         return 0.0
-    return int(value) / 10e1
+    else:
+        value = int(value) / 10e1
+    return value
+
+
+def won_to_float(value):
+    value = value.replace(",", "").replace("원", "").strip()
+    if not value:
+        return 0.0
+    else:
+        value = int(value) / 10e1
+    return value
+
+
+def dollar_to_float(value):
+    value = value.replace(",", "").replace("$", "").strip()
+    if not value:
+        return 0.0
+    else:
+        value = int(value) / 10e1
+    return value
 
 
 def dot_dash_to_slash(value):

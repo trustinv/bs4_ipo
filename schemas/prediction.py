@@ -35,7 +35,7 @@ class PredictionCreateSchema(PredictionBaseSchema):
         if isinstance(value, str):
             value = int(converters.only_digits(value))
             return value
-        return value
+        return int(value)
 
     @validator("ci_incidence_specific_gravity", pre=True)
     def convert_ci_incidence_specific_gravity(cls, value):

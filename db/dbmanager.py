@@ -5,49 +5,111 @@ from sqlalchemy.orm import sessionmaker
 from settings import DB_URL
 from utilities.session import session_scope
 from db import models
+from sqlalchemy import and_
+from settings import DB_URL, DELISTING
+from utilities.session import session_scope
 
 
 class DbManager:
     def __init__(self, *args, **kwargs):
-        self.engine = create_engine(DB_URL)
+        self.engine = create_engine(DB_URL, pool_recycle=3600)
         self.Session = sessionmaker(bind=self.engine)
 
-    def delete(self):
-        # "상장철회"일 경우 컬럼 필드 값을 변경함.
-        pass
+    def read(self, ci_name, delisting=0, **kwargs):
+        if not delisting:
+            result = None
+            with session_scope(self.Session) as session:
+                result = (
+                    session.query(models.CompanyInfoGeneral).filter(
+                        and_(
+                            models.CompanyInfoGeneral.ci_name == ci_name,
+                            models.CompanyInfoGeneral.ci_demand_forecast_date != DELISTING,
+                        )
+                    )
+                ).first()
+            return result
+            # return result
 
-    def create(self):
-        pass
-
-    def create_n_update(self):
-        """
-        1) 데이터 존재여부를 확인.
-            - 상장철회 된 데이터는 가져 올 필요가 없음.
-        """
+    def delist(self, ci_name=None):
         with session_scope(self.Session) as session:
-            general_instance = CompanyInfoGeneralSchema(**item)
-            # Check if a company with the same name already exists in the database
-            existing_company = (
+            result = (
                 session.query(models.CompanyInfoGeneral)
-                .filter_by(ci_name=general_instance.ci_name)
+                .filter(
+                    and_(
+                        models.CompanyInfoGeneral.ci_name == ci_name,
+                        models.CompanyInfoGeneral.ci_demand_forecast_date != DELISTING,
+                    )
+                )
+                .update({models.CompanyInfoGeneral.ci_demand_forecast_date: DELISTING})
                 .first()
             )
-            if existing_company is None:
-                # Add the new company to the database
-                cig = models.CompanyInfoGeneral(**pydantic_instance.dict())
-                session.add(cig)
-            else:
-                # Check if any of the values have changed
-                update_required = False
-                for key, value in pydantic_instance.dict().items():
-                    if key in ["_sa_instance_state", "id"] or value == getattr(
-                        existing_company, key
-                    ):
-                        continue
-                    setattr(existing_company, key, value)
-                    update_required = True
-                if update_required:
-                    session.commit()
+            if result:
+                return True
+            return False
 
-    def read(self):
+    def update(self, DELISTING="공모철회", **kwargs):
+        general = kwargs["general"]
+        shareholders = kwargs["shareholders"]
+        predictions = kwargs["predictions"]
+        subscribers = kwargs["subscribers"]
+        financials = kwargs["financials"]
+        # 상장철회가 아니었던 종목이 '상장철회'로 업데이트 하는 경우
+
+        if DELISTING:
+            with session_scope(self.Session) as session:
+                result = (
+                    session.query(models.CompanyInfoGeneral)
+                    .filter(
+                        and_(
+                            models.CompanyInfoGeneral.ci_name == general.ci_name,
+                            models.CompanyInfoGeneral.ci_demand_forecast_date != DELISTING,
+                        )
+                    )
+                    .update({models.CompanyInfoGeneral.ci_demand_forecast_date: DELISTING})
+                    .first()
+                )
+
+                if result:
+                    return True
+                return False
+        # '상장철회 이외 데이터가 업데이트 되는 경우'
         pass
+
+    def create(self, **kwargs):
+
+        general = kwargs["general"]
+        shareholders = kwargs["shareholders"]
+        predictions = kwargs["predictions"]
+        subscribers = kwargs["subscribers"]
+        financials = kwargs["financials"]
+
+        with session_scope(self.Session) as session:
+            session.begin_nested()
+            company = models.CompanyInfoGeneral(**general.dict())
+            session.add(company)
+            session.flush()
+            session.commit()
+            session.bulk_insert_mappings(
+                models.CompanyInfoShareholder,
+                [{**shareholder.dict(), "ci_idx": company.ci_idx} for shareholder in shareholders],
+            )
+            session.bulk_insert_mappings(
+                models.CompanyInfoPrediction,
+                [{**prediction.dict(), "ci_idx": company.ci_idx} for prediction in predictions],
+            )
+            session.bulk_insert_mappings(
+                models.CompanyInfoSubscriber,
+                [{**subscriber.dict(), "ci_idx": company.ci_idx} for subscriber in subscribers],
+            )
+            session.bulk_insert_mappings(
+                models.CompanyInfoFinancial,
+                [{**financial.dict(), "ci_idx": company.ci_idx} for financial in financials],
+            )
+            session.commit()
+            return True
+
+
+if __name__ == "__main__":
+
+    instance = DbManager()
+    instance.read("래몽래인")

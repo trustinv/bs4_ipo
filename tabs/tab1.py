@@ -77,7 +77,7 @@ def scrape_ipostock(code):
     from utilities import request_helper
 
     req = request_helper.requests_retry_session().get(url, timeout=5)
-    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
+    soup = BeautifulSoup(req.content, "lxml")
     table1 = soup.find("table", width="550", style="margin:0 auto;")
     table2, table3 = soup.select('table[width="780"][class="view_tb"]')
 

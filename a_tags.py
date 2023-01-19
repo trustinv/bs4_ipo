@@ -11,7 +11,7 @@ def scrape_categories(url, code=None):
     from utilities import request_helper
 
     req = request_helper.requests_retry_session().get(url, timeout=5)
-    soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
+    soup = BeautifulSoup(req.content, "lxml")
 
     category_path = [a.get("href") for a in soup.find_all("a", href=re.compile("view_0[1-5]"))]
     if category_path:

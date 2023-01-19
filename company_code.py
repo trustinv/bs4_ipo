@@ -24,7 +24,7 @@ def scrape_company_codes(year=2021):
             from utilities import request_helper
 
             req = request_helper.requests_retry_session().get(url, timeout=5)
-            soup = BeautifulSoup(req.content, "lxml", from_encoding="utf-8")
+            soup = BeautifulSoup(req.content, "lxml")
 
             page_data = soup.select_one('td[colspan="9"]')
             if page_data is not None:
