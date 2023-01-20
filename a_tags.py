@@ -1,35 +1,21 @@
 import re
-import time
-import requests
+import asyncio
+import aiohttp
 from bs4 import BeautifulSoup
 from agents import get_user_agents
 
 
-def scrape_categories(url, code=None):
-
+async def scrape_categories(url, code=None):
     url = f"{url}/view_01.asp?code={code}"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                soup = BeautifulSoup(await resp.text(), "lxml")
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        print("Request failed, retrying in 5 seconds...")
+        print(e)
+        await asyncio.sleep(0.3)
 
-    session = requests.Session()
-    session.timeout = 3
-    while True:
-        try:
-            req = session.get(url)
-            req.encoding = "utf-8"
-            print(req.text)
-            # req = requests.get(url)
-            soup = BeautifulSoup(req.content, "lxml")
-            break
-        except requests.exceptions.ReadTimeoutError as e:
-            print("Request failed, retrying in 5 seconds...")
-            print(e)
-            time.sleep(0.3)
-        except requests.exceptions.ConnectionError as e:
-            print("Request failed, retrying in 5 seconds...")
-            print(e)
-            time.sleep(0.3)
-        except requests.exceptions.RequestException as e:
-            print("Request failed, retrying in 5 seconds...")
-            print(e)
     category_path = [a.get("href") for a in soup.find_all("a", href=re.compile("view_0[1-5]"))]
     if category_path:
         pattern = r"\d+"
@@ -40,7 +26,11 @@ def scrape_categories(url, code=None):
 
 if __name__ == "__main__":
 
-    code = "B202010131"
-    url = "http://www.ipostock.co.kr/view_pg"
-    category_nums = scrape_categories(url, code)
-    print(category_nums)
+    async def main():
+        async with aiohttp.ClientSession() as session:
+            code = "B202010131"
+            url = "http://www.ipostock.co.kr/view_pg"
+            category_nums = await scrape_categories(url, code)
+            print(category_nums)
+
+    asyncio.run(main())

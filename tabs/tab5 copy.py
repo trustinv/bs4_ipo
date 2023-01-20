@@ -1,10 +1,11 @@
-import asyncio
-import aiohttp
+import time
+import requests
 
 from bs4 import BeautifulSoup
+from agents import get_user_agents
 
 
-async def extract_data_from_table1(soup):
+def extract_data_from_table1(soup, url):
     try:
         keys = [
             "ci_price",
@@ -39,7 +40,7 @@ async def extract_data_from_table1(soup):
         return result
 
 
-async def extract_data_from_table2(soup):
+def extract_data_from_table2(soup, url):
     try:
         table = soup.find_all("table", width="780", cellspacing="1", class_="view_tb2")[-1]
         result = dict(
@@ -67,56 +68,57 @@ async def extract_data_from_table2(soup):
         return result
 
 
-async def scrape_ipostock(code):
+def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_05.asp?code={code}"
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                soup = BeautifulSoup(await resp.text(), "lxml")
-            soup = BeautifulSoup(await resp.text(), "lxml")
-    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-        print("Request failed, retrying in 5 seconds...")
-        print(e)
-        await asyncio.sleep(0.3)
+    session = requests.Session()
+    session.timeout = 3
+    while True:
+        try:
+            req = session.get(url)
+            req.encoding = "utf-8"
+            print(req.text)
+            # req = requests.get(url)
+            soup = BeautifulSoup(req.content, "lxml")
+            break
+        except requests.exceptions.ReadTimeoutError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.ConnectionError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.RequestException as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+    table1_data = extract_data_from_table1(soup, url)
+    table2_data = extract_data_from_table2(soup, url)
 
-    t1, t2 = await asyncio.gather(
-        extract_data_from_table1(soup),
-        extract_data_from_table2(soup),
-    )
-
-    return t1, t2
+    return table1_data, table2_data
 
 
 if __name__ == "__main__":
+    code = "B202010131"
+    prediction_result, general_result = scrape_ipostock(code)
 
-    async def main():
+    from schemas.general import GeneralCreateSchema
+    from schemas.prediction import PredictionCreateSchema
 
-        #        code = "B202010131"
-        code = "B202010131"
-        prediction_result, general_result = await scrape_ipostock(code)
+    g = GeneralCreateSchema(**general_result)
+    s = [PredictionCreateSchema(**data) for data in prediction_result or []]
 
-        from schemas.general import GeneralCreateSchema
-        from schemas.prediction import PredictionCreateSchema
+    from pprint import pprint as pp
 
-        g = GeneralCreateSchema(**general_result)
-        s = [PredictionCreateSchema(**data) for data in prediction_result or []]
-
-        print(g)
-        print(s)
-        # from pprint import pprint as pp
-
-        # # pp(g.dict())
-        # # pp(g.dict()["ci_competition_rate"])
-        # # pp(g.dict()["ci_promise_rate"])
-        # # pp(g.dict()["ci_promise_content"])
-        # si1 = s[0].dict()
-        # si2 = s[1].dict()
-        # si3 = s[2].dict()
-        # si4 = s[3].dict()
-        # print(si1)
-        # print(si2)
-        # print(si3)
-        # print(si4)
-
-    asyncio.run(main())
+    # pp(g.dict())
+    # pp(g.dict()["ci_competition_rate"])
+    # pp(g.dict()["ci_promise_rate"])
+    # pp(g.dict()["ci_promise_content"])
+    si1 = s[0].dict()
+    si2 = s[1].dict()
+    si3 = s[2].dict()
+    si4 = s[3].dict()
+    print(si1)
+    # print(si2)
+    # print(si3)
+    # print(si4)

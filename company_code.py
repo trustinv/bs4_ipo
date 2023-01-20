@@ -1,14 +1,16 @@
-import time
+import aiohttp
+import asyncio
+
 import re
 from datetime import datetime
 
 import bs4
-import requests
+from bs4 import BeautifulSoup
 from db.dbmanager import DBManager
 from utilities import request_helper
 
 
-def delist(td_name, delisted_codes):
+async def delist(td_name, delisted_codes):
     company_name = (
         td_name.select_one("table > tr > td:nth-child(2) > a > font").text.strip().replace(".", "")
     )
@@ -22,7 +24,7 @@ def delist(td_name, delisted_codes):
             delisted = instance.delist(company_name)
 
 
-def get_href(td_name):
+async def get_href(td_name):
     a_tag = td_name.select_one('a[href*="view_pg"][class=""]')
     href = a_tag.get("href")
     code = re.search("code=(.+)&", href).group(1)
@@ -30,7 +32,7 @@ def get_href(td_name):
 
 
 # @timeit
-def scrape_company_codes(year=2021):
+async def scrape_company_codes(year=2021):
 
     current_year = datetime.now().year
     codes = []
@@ -46,27 +48,15 @@ def scrape_company_codes(year=2021):
             page += 1
             url = f"http://www.ipostock.co.kr/sub03/ipo02.asp?str4={year}&str5=all&page={page}"
 
-            session = requests.Session()
-            session.timeout = 3
-            while True:
-                try:
-                    req = session.get(url)
-                    req.encoding = "utf-8"
-                    print(req.text)
-                    # req = requests.get(url)
-                    soup = bs4.BeautifulSoup(req.content, "lxml")
-                    break
-                except requests.exceptions.ReadTimeoutError as e:
-                    print("Request failed, retrying in 5 seconds...")
-                    print(e)
-                    time.sleep(0.3)
-                except requests.exceptions.ConnectionError as e:
-                    print("Request failed, retrying in 5 seconds...")
-                    print(e)
-                    time.sleep(0.3)
-                except requests.exceptions.RequestException as e:
-                    print("Request failed, retrying in 5 seconds...")
-                    print(e)
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(url) as resp:
+                        soup = BeautifulSoup(await resp.text(), "lxml")
+                    soup = BeautifulSoup(await resp.text(), "lxml")
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                print("Request failed, retrying in 5 seconds...")
+                print(e)
+                await asyncio.sleep(0.3)
 
             page_data = soup.select_one('td[colspan="9"]')
             if page_data is not None:
@@ -86,7 +76,7 @@ def scrape_company_codes(year=2021):
 
                         if delisting == "공모철회":
                             if td_name is not None:
-                                delist(td_name, delisted_codes)
+                                await delist(td_name, delisted_codes)
                                 # 성공적으로 종목을 공모 철회로 바꾼 경우.
                                 # 이미 되어 있는 경우
 
@@ -94,10 +84,14 @@ def scrape_company_codes(year=2021):
                                 # 1) 반환 값이 공모철회(0) ->
                                 # 2) 반환 값이 공모철회(X) -> ci_demand_forecast_? 를 공모철회로 변경
                         else:
-                            codes.append(get_href(td_name))
+                            codes.append(await get_href(td_name))
     return codes, delisted_codes
 
 
 if __name__ == "__main__":
-    company_codes, delisted_codes = scrape_company_codes()
-    print(len(company_codes), len(delisted_codes))
+
+    async def main():
+        company_codes, delisted_codes = await scrape_company_codes()
+        print(len(company_codes), len(delisted_codes))
+
+    asyncio.run(main())

@@ -12,7 +12,7 @@ from utilities.session import session_scope
 
 class DBManager:
     def __init__(self, *args, **kwargs):
-        self.engine = create_engine(DB_URL, pool_recycle=3600)
+        self.engine = create_engine(DB_URL, pool_recycle=3600, pool_timeout=1000)
         self.Session = sessionmaker(bind=self.engine)
 
     def read(self, ci_name, **kwargs):
@@ -55,7 +55,7 @@ class DBManager:
         financials = kwargs["financials"]
         # 상장철회가 아니었던 종목이 '상장철회'로 업데이트 하는 경우
 
-        DELISTING = '공모철회' if DELISTING else ''
+        DELISTING = "공모철회" if DELISTING else ""
         with session_scope(self.Session) as session:
             if DELISTING:
                 result = (
@@ -80,19 +80,35 @@ class DBManager:
                 session.commit()
 
                 for shareholder in shareholders:
-                    session.merge(models.CompanyInfoShareholder(**{**shareholder.dict(), "ci_idx": company.ci_idx}))
+                    session.merge(
+                        models.CompanyInfoShareholder(
+                            **{**shareholder.dict(), "ci_idx": company.ci_idx}
+                        )
+                    )
                     session.commit()
 
                 for prediction in predictions:
-                    session.merge(models.CompanyInfoPrediction(**{**prediction.dict(), "ci_idx": company.ci_idx}))
+                    session.merge(
+                        models.CompanyInfoPrediction(
+                            **{**prediction.dict(), "ci_idx": company.ci_idx}
+                        )
+                    )
                     session.commit()
 
                 for subscriber in subscribers:
-                    session.merge(models.CompanyInfoSubscriber(**{**subscriber.dict(), "ci_idx": company.ci_idx}))
+                    session.merge(
+                        models.CompanyInfoSubscriber(
+                            **{**subscriber.dict(), "ci_idx": company.ci_idx}
+                        )
+                    )
                     session.commit()
 
                 for financial in financials:
-                    session.merge(models.CompanyInfoFinancial(**{**financial.dict(), "ci_idx": company.ci_idx}))
+                    session.merge(
+                        models.CompanyInfoFinancial(
+                            **{**financial.dict(), "ci_idx": company.ci_idx}
+                        )
+                    )
                     session.commit()
                 return True
 

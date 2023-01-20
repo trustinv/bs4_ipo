@@ -1,5 +1,3 @@
-import asyncio
-import aiohttp
 import time
 import requests
 import re
@@ -9,7 +7,7 @@ from agents import get_user_agents
 from pprint import pprint as pp
 
 
-async def extract_data_from_table1(table):
+def extract_data_from_table1(table):
     keys = [
         "ci_big_ir_plan",
         "ci_demand_forecast_date",
@@ -23,7 +21,7 @@ async def extract_data_from_table1(table):
     return result
 
 
-async def extract_data_from_table2(talbe):
+def extract_data_from_table2(talbe):
     keys = [
         "ci_hope_po_price",
         "ci_hope_po_amount",
@@ -43,7 +41,7 @@ async def extract_data_from_table2(talbe):
     return result
 
 
-async def extract_data_from_table3(table):
+def extract_data_from_table3(table):
     keys = [
         "ci_professional_investor_stock",
         "ci_professional_investor_rate",
@@ -65,7 +63,7 @@ async def extract_data_from_table3(table):
     return result
 
 
-async def extract_data_from_table4(table):
+def extract_data_from_table4(table):
     keys = [
         "ci_stock_firm",
         "ci_assign_quantity",
@@ -85,57 +83,56 @@ async def extract_data_from_table4(table):
     return result
 
 
-async def scrape_ipostock(code):
+def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_04.asp?code={code}"
 
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                soup = BeautifulSoup(await resp.text(), "lxml")
-            soup = BeautifulSoup(await resp.text(), "lxml")
-    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-        print("Request failed, retrying in 5 seconds...")
-        print(e)
-        await asyncio.sleep(0.3)
-
+    session = requests.Session()
+    session.timeout = 3
+    while True:
+        try:
+            req = session.get(url)
+            req.encoding = "utf-8"
+            print(req.text)
+            # req = requests.get(url)
+            soup = BeautifulSoup(req.content, "lxml")
+            break
+        except requests.exceptions.ReadTimeoutError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.ConnectionError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.RequestException as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
     table1, table2, table3, table4, *_ = soup.select("table.view_tb")
 
-    t1, t2, t3, t4 = await asyncio.gather(
-        extract_data_from_table1(table1),
-        extract_data_from_table2(table2),
-        extract_data_from_table3(table3),
-        extract_data_from_table4(table4),
-    )
-
-    return {**t1, **t2, **t3}, t4
+    table1_data = extract_data_from_table1(table1)
+    table2_data = extract_data_from_table2(table2)
+    table3_data = extract_data_from_table3(table3)
+    table4_data = extract_data_from_table4(table4)
+    return {**table1_data, **table2_data, **table3_data}, table4_data
 
 
 if __name__ == "__main__":
 
-    async def main():
+    code = "B202010131"
+    general_result, subscriber_results = scrape_ipostock(code)
+    from pprint import pprint as pp
 
-        code = "B202010131"
+    # pp(subscriber_results)
+    from schemas.general import GeneralCreateSchema
+    from schemas.subscriber import SubscriberCreateSchema
 
-        code = "B202010131"
-        general_result, subscriber_results = await scrape_ipostock(code)
-        from pprint import pprint as pp
+    g = GeneralCreateSchema(**general_result)
+    # s = [SubscriberCreateSchema(**subscriber_result) for subscriber_result in subscriber_results]
 
-        # pp(subscriber_results)
-        from schemas.general import GeneralCreateSchema
-        from schemas.subscriber import SubscriberCreateSchema
+    from pprint import pprint as pp
 
-        g = GeneralCreateSchema(**general_result)
-        s = [
-            SubscriberCreateSchema(**subscriber_result) for subscriber_result in subscriber_results
-        ]
-
-        from pprint import pprint as pp
-
-        print(g)
-        print(s)
-        # gi = g.dict()
-        # print(gi["ci_demand_forecast_date"])
-        # print(gi["ci_appraised_price"])
-        # pp(s)
-
-    asyncio.run(main())
+    # pp(g)
+    gi = g.dict()
+    print(gi["ci_demand_forecast_date"])
+    print(gi["ci_appraised_price"])
+    # pp(s)

@@ -1,3 +1,5 @@
+import asyncio
+import aiohttp
 import time
 import requests
 from pprint import pprint as pp
@@ -5,7 +7,7 @@ from pprint import pprint as pp
 from bs4 import BeautifulSoup
 
 
-def get_capital_n_stcks(table):
+async def get_capital_n_stcks(table):
     capital = table.select_one('td[width="*"]').get_text().split("억원")[0].strip()
     stocks = (
         table.select_one("tr:nth-of-type(2) td:nth-of-type(2)")
@@ -18,17 +20,17 @@ def get_capital_n_stcks(table):
     return capital, stocks
 
 
-def extract_data_from_table1(table):
-    capital, stocks = get_capital_n_stcks(table)
+async def extract_data_from_table1(table):
+    capital, stocks = await get_capital_n_stcks(table)
     return dict(ci_before_po_capital=capital, ci_before_po_stocks=stocks)
 
 
-def extract_data_from_table2(table):
-    capital, stocks = get_capital_n_stcks(table)
+async def extract_data_from_table2(table):
+    capital, stocks = await get_capital_n_stcks(table)
     return dict(ci_after_po_capital=capital, ci_after_po_stocks=stocks)
 
 
-def extract_data_from_table3(table, url):
+async def extract_data_from_table3(table, url):
     keys = [
         "ci_category",
         "ci_category_name",
@@ -52,11 +54,11 @@ def extract_data_from_table3(table, url):
         else:
             categories2.append(i.text)
 
-    def nesten_list(temp):
+    async def nesten_list(temp):
         return list(map(list, zip(*[iter(temp)] * 5)))
 
-    temp3 = nesten_list(categories1)
-    temp4 = nesten_list(categories2)
+    temp3 = await nesten_list(categories1)
+    temp4 = await nesten_list(categories2)
     for i in temp3:
         i.insert(0, 1)
     for j in temp4:
@@ -65,57 +67,54 @@ def extract_data_from_table3(table, url):
     return result
 
 
-def scrape_ipostock(code):
+async def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_02.asp?code={code}"
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as resp:
+                soup = BeautifulSoup(await resp.text(), "lxml")
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        print("Request failed, retrying in 5 seconds...")
+        print(e)
+        await asyncio.sleep(0.3)
 
-    session = requests.Session()
-    session.timeout = 3
-    while True:
-        try:
-            req = session.get(url)
-            req.encoding = "utf-8"
-            print(req.text)
-            # req = requests.get(url)
-            soup = BeautifulSoup(req.content, "lxml")
-            break
-        except requests.exceptions.ReadTimeoutError as e:
-            print("Request failed, retrying in 5 seconds...")
-            print(e)
-            time.sleep(0.3)
-        except requests.exceptions.ConnectionError as e:
-            print("Request failed, retrying in 5 seconds...")
-            print(e)
-            time.sleep(0.3)
-        except requests.exceptions.RequestException as e:
-            print("Request failed, retrying in 5 seconds...")
-            print(e)
     table1, table2, table3 = soup.find_all("table", class_="view_tb")[:3]
 
-    table1_data = extract_data_from_table1(table1)
-    table2_data = extract_data_from_table2(table2)
-    table3_data = extract_data_from_table3(table3, url)
+    t1, t2, t3, = await asyncio.gather(
+        extract_data_from_table1(table1),
+        extract_data_from_table2(table2),
+        extract_data_from_table3(table3, url),
+    )
 
-    return {**table1_data, **table2_data}, table3_data
+    return {**t1, **t2}, t3
 
 
 if __name__ == "__main__":
 
-    code = "B202010131"
-    general_result, shareholder_results = scrape_ipostock(code)
-    from schemas.general import GeneralCreateSchema
-    from schemas.shareholder import ShareholderCreateSchema
+    async def main():
 
-    # pp(shareholder_result)
-    pp(general_result)
-    g = GeneralCreateSchema(**general_result)
-    s = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
+        #        code = "B202111241"
 
-    # print("*" * 100)
-    # print(s, len(s))
-    pp(s[0].dict())
-    pp(s[1].dict())
-    pp(s[2].dict())
-    pp(s[3].dict())
-    pp(s[4].dict())
-    pp(s[5].dict())
-    pp(s[6].dict())
+        code = "B202010131"
+        general_result, shareholder_results = await scrape_ipostock(code)
+        from schemas.general import GeneralCreateSchema
+        from schemas.shareholder import ShareholderCreateSchema
+
+        # pp(shareholder_result)
+        # pp(general_result)
+        g = GeneralCreateSchema(**general_result)
+        s = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
+
+        pp(g.dict())
+
+        # print("*" * 100)
+        # print(s, len(s))
+        pp(s[0].dict())
+        pp(s[1].dict())
+        pp(s[2].dict())
+        pp(s[3].dict())
+        pp(s[4].dict())
+        pp(s[5].dict())
+        pp(s[6].dict())
+
+    asyncio.run(main())

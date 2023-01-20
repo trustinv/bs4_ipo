@@ -1,9 +1,13 @@
-import asyncio
-import aiohttp
+import time
+import sys
+import requests
+
 from bs4 import BeautifulSoup
+from agents import get_user_agents
+from collections import ChainMap
 
 
-async def face_value(soup):
+def face_value(soup):
     ci_face_value = None
     tds = soup.select('table[width="390"] td')
     for idx, td in enumerate(tds):
@@ -14,14 +18,14 @@ async def face_value(soup):
     return ci_face_value or "0"
 
 
-async def extract_data_from_table1(table):
+def extract_data_from_table1(table):
     data2 = table.select_one(".view_tit").get_text()
     data3 = table.select_one(".view_txt01").get_text()
     data1 = table.select_one("img")["src"]
     return {"ci_market_separation": data1, "ci_name": data2, "ci_code": data3}
 
 
-async def extract_data_from_table2(table):
+def extract_data_from_table2(table):
     keys = [
         "ci_ceo",
         "ci_establishment_date",
@@ -47,7 +51,7 @@ async def extract_data_from_table2(table):
     return result
 
 
-async def extract_data_from_table3(table):
+def extract_data_from_table3(table):
     keys = [
         "ci_review_c_date",
         "ci_review_a_date",
@@ -68,47 +72,52 @@ async def extract_data_from_table3(table):
     return result
 
 
-async def scrape_ipostock(code):
+def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
     try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
-                soup = BeautifulSoup(await resp.text(), "lxml")
-    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        req = requests.get(url)
+        req.encoding = "utf-8"
+        # req = requests.get(url)
+        soup = BeautifulSoup(req.content, "lxml")
+    except requests.exceptions.ReadTimeoutError as e:
         print("Request failed, retrying in 5 seconds...")
         print(e)
-        await asyncio.sleep(0.3)
-
+        time.sleep(0.3)
+    except requests.exceptions.ConnectionError as e:
+        print("Request failed, retrying in 5 seconds...")
+        print(e)
+        time.sleep(0.3)
+    except requests.exceptions.RequestException as e:
+        print("Request failed, retrying in 5 seconds...")
+        print(e)
     table1 = soup.find("table", width="550", style="margin:0 auto;")
     table2, table3 = soup.select('table[width="780"][class="view_tb"]')
 
-    face_value_result, t1, t2, t3 = await asyncio.gather(
-        face_value(soup),
-        extract_data_from_table1(table1),
-        extract_data_from_table2(table2),
-        extract_data_from_table3(table3),
-    )
-
-    result = {"ci_face_value": face_value_result, **t1, **t2, **t3}
+    result = {
+        "ci_face_value": face_value(soup),
+        **extract_data_from_table1(table1),
+        **extract_data_from_table2(table2),
+        **extract_data_from_table3(table3),
+    }
     return result
 
 
 if __name__ == "__main__":
+    # 바이오노트
+    # code = "B202206162"
+    # 래몽래인
+    # code = "B202010131"
+    # 한국제10호스팩
+    code = "B202111241"
+    result = scrape_ipostock(code)
 
-    async def main():
-        code = "B202111241"
-        result = await scrape_ipostock(code)
+    # print(result["ci_public_offering_stocks"])
 
-        # print(result["ci_public_offering_stocks"])
+    from schemas.general import GeneralCreateSchema
 
-        from schemas.general import GeneralCreateSchema
+    g = GeneralCreateSchema(**result)
+    from pprint import pprint as pp
 
-        g = GeneralCreateSchema(**result)
-        from pprint import pprint as pp
-
-        inst = g.dict()
-        pp(inst)
-        # pp(inst["ci_face_value"])
-        # pp(inst["ci_public_offering_stocks"])
-
-    asyncio.run(main())
+    inst = g.dict()
+    pp(inst["ci_face_value"])
+    # pp(inst["ci_public_offering_stocks"])
