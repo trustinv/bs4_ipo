@@ -1,6 +1,5 @@
-import sys
+import time
 import requests
-import re
 
 from bs4 import BeautifulSoup
 from agents import get_user_agents
@@ -72,10 +71,27 @@ def extract_data_from_table2(soup, url):
 def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_05.asp?code={code}"
 
-    from utilities import request_helper
-
-    req = request_helper.requests_retry_session().get(url, timeout=5)
-    soup = BeautifulSoup(req.content, "lxml")
+    session = requests.Session()
+    session.timeout = 3
+    while True:
+        try:
+            req = session.get(url)
+            req.encoding = "utf-8"
+            print(req.text)
+            # req = requests.get(url)
+            soup = BeautifulSoup(req.content, "lxml")
+            break
+        except requests.exceptions.ReadTimeoutError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.ConnectionError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.RequestException as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
     table1_data = extract_data_from_table1(soup, url)
     table2_data = extract_data_from_table2(soup, url)
 

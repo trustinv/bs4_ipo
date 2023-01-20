@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-import sys
+import time
 import requests
 import re
 
@@ -86,10 +85,28 @@ def extract_data_from_table4(table):
 
 def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_04.asp?code={code}"
-    from utilities import request_helper
 
-    req = request_helper.requests_retry_session().get(url, timeout=5)
-    soup = BeautifulSoup(req.content, "lxml")
+    session = requests.Session()
+    session.timeout = 3
+    while True:
+        try:
+            req = session.get(url)
+            req.encoding = "utf-8"
+            print(req.text)
+            # req = requests.get(url)
+            soup = BeautifulSoup(req.content, "lxml")
+            break
+        except requests.exceptions.ReadTimeoutError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.ConnectionError as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
+            time.sleep(0.3)
+        except requests.exceptions.RequestException as e:
+            print("Request failed, retrying in 5 seconds...")
+            print(e)
     table1, table2, table3, table4, *_ = soup.select("table.view_tb")
 
     table1_data = extract_data_from_table1(table1)

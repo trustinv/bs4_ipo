@@ -10,6 +10,7 @@ import company_code
 from tabs import tab1, tab2, tab3, tab4, tab5
 from db.dbmanager import DBManager
 
+
 def start_scrape(categories):
     shareholders = []
     subscribers = []
@@ -36,11 +37,11 @@ def start_scrape(categories):
                 general_result.update(general_result5)
 
     return dict(
-    general = GeneralCreateSchema(**general_result),
-    shareholders = [ShareholderCreateSchema(**shareholder) for shareholder in shareholders],
-    subscribers = [SubscriberCreateSchema(**subscriber) for subscriber in subscribers],
-    financials = [FinancialCreateSchema(**financial) for financial in financials],
-    predictions = [PredictionCreateSchema(**prediction) for prediction in predictions]
+        general=GeneralCreateSchema(**general_result),
+        shareholders=[ShareholderCreateSchema(**shareholder) for shareholder in shareholders],
+        subscribers=[SubscriberCreateSchema(**subscriber) for subscriber in subscribers],
+        financials=[FinancialCreateSchema(**financial) for financial in financials],
+        predictions=[PredictionCreateSchema(**prediction) for prediction in predictions],
     )
 
 
@@ -48,25 +49,23 @@ if __name__ == "__main__":
 
     count = 0
     url = f"{settings.IPO_URL}/view_pg"
-    company_codes, delisted_codes= company_code.scrape_company_codes()
+    company_codes, delisted_codes = company_code.scrape_company_codes()
     print(f"company_codes, delisted_codes: {len(company_codes)}, {len(delisted_codes)}")
     for code in company_codes:
         general_result = {}
-
         categories = a_tags.scrape_categories(url, code)
-
         result = start_scrape(categories)
-            
+
         print(count, code)
         count += 1
 
         db_instance = DBManager()
         success = db_instance.create(
-            general=result['general'],
-            shareholders=result['shareholders'],
-            predictions=result['predictions'],
-            subscribers=result['subscribers'],
-            financials=result['financials'],
+            general=result["general"],
+            shareholders=result["shareholders"],
+            predictions=result["predictions"],
+            subscribers=result["subscribers"],
+            financials=result["financials"],
         )
 
         if success:
