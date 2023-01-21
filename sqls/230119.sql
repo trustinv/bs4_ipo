@@ -1,3 +1,18 @@
+ALTER TABLE
+    test_trustinv.company_info_general MODIFY COLUMN ci_idx INT AUTO_INCREMENT PRIMARY KEY;
+
+ALTER TABLE
+    test_trustinv.company_info_financial MODIFY COLUMN cif_idx INT AUTO_INCREMENT PRIMARY KEY;
+
+ALTER TABLE
+    test_trustinv.company_info_prediction MODIFY COLUMN cip_idx INT AUTO_INCREMENT PRIMARY KEY;
+
+ALTER TABLE
+    test_trustinv.company_info_shareholder MODIFY COLUMN cis_idx INT AUTO_INCREMENT PRIMARY KEY;
+
+ALTER TABLE
+    test_trustinv.company_info_subscriber MODIFY COLUMN cis_idx INT AUTO_INCREMENT PRIMARY KEY;
+
 -- 기존 B디비의 데이터가 들어 있는 테이블을 A디비에 새로 생성함.
 
 -- create table test_trustinv.company_info_general as select * from trustinv.company_info_general;
@@ -24,15 +39,15 @@
 
 -- - truncate test_trustinv tables
 
--- truncate table test_trustinv.company_info_general ;
+truncate table test_trustinv.company_info_general ;
 
--- truncate table test_trustinv.company_info_financial ;
+truncate table test_trustinv.company_info_financial ;
 
--- truncate table test_trustinv.company_info_prediction ;
+truncate table test_trustinv.company_info_prediction ;
 
--- truncate table test_trustinv.company_info_shareholder ;
+truncate table test_trustinv.company_info_shareholder ;
 
--- truncate table test_trustinv.company_info_subscriber ;
+truncate table test_trustinv.company_info_subscriber ;
 
 select *
 from

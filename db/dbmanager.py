@@ -1,13 +1,15 @@
-import pymysql
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from settings import DB_URL
+# from settings import DB_URL
 from utilities.session import session_scope
 from db import models
 from sqlalchemy import and_
-from settings import DB_URL, DELISTING
-from utilities.session import session_scope
+from config.settings import settings
+
+
+DB_URL = settings.DB_URL
+DELISTING = settings.DELISTING
 
 
 class DBManager:
@@ -41,7 +43,6 @@ class DBManager:
                     )
                 )
                 .update({models.CompanyInfoGeneral.ci_demand_forecast_date: DELISTING})
-                .first()
             )
             if result:
                 return True
@@ -147,6 +148,6 @@ class DBManager:
 
 
 if __name__ == "__main__":
-
     instance = DBManager()
-    instance.read("래몽래인")
+    data = instance.read("래몽래인")
+    print(data)

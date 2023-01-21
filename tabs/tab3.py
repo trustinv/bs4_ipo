@@ -5,6 +5,7 @@ import pandas as pd
 
 
 async def scrape_ipostock(code):
+    print("tab3 company code", code)
     url = f"http://www.ipostock.co.kr/view_pg/view_03.asp?code={code}"
     keys = [
         "ci_category1",
@@ -24,35 +25,49 @@ async def scrape_ipostock(code):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as resp:
             data = await resp.text()
-        df = pd.read_html(data)
-        df1 = df[21]
-        df1 = df1[~df1[0].isin(["자산총계", "부채총계", "자본총계"])]
-        df1 = df1.iloc[:, 1:4]
-        df_str = df1.iloc[:2, :]
-        df2 = df1.loc[2:, :].astype("float")
-        result = pd.concat([df_str, df2])
-        df3 = result.T.values
-        temp_data = []
-        for data_row in df3:
-            data_instance = {}
-            for key, value in zip(keys, data_row):
-                if isinstance(value, float):
-                    if math.isnan(value):
-                        processed_value = format(value, ".2f")
-                    else:
-                        processed_value = format(value / (10e7), ".2f")
+
+    df = pd.read_html(data)
+    df1 = df[21]
+    구분 = df1.iloc[0, 0]
+
+    if 구분 != "구분":
+        print("There are NaN values in the DataFrame.")
+        df1 = df[22]
+
+    df1 = df1[~df1[0].isin(["자산총계", "부채총계", "자본총계"])]
+    df1 = df1.iloc[:, 1:4]
+    df1 = df1.dropna(axis=1, thresh=1, subset=[0])
+
+    df_str = df1.iloc[:2, :]
+    df2 = df1.loc[2:, :].astype("float")
+    result = pd.concat([df_str, df2])
+    df3 = result.T.values
+    temp_data = []
+    for data_row in df3:
+        data_instance = {}
+
+        for key, value in zip(keys, data_row):
+            # print(key, value)
+            if isinstance(value, float):
+                if math.isnan(value):
+                    processed_value = format(value, ".2f")
                 else:
-                    processed_value = value
-                data_instance[key] = processed_value
-            temp_data.append(data_instance)
-        return temp_data
+                    processed_value = format(value / (10e7), ".2f")
+            else:
+                processed_value = value
+            data_instance[key] = processed_value
+        temp_data.append(data_instance)
+    return temp_data
 
 
 if __name__ == "__main__":
 
     async def main():
 
-        code = "B202010131"
+        code = "B202111122"
+        # code = "B201203062"
+        code = "B201203062"
+
         financial_result = await scrape_ipostock(code)
 
         from pprint import pprint as pp

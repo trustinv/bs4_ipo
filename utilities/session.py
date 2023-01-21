@@ -20,7 +20,7 @@ if __name__ == "__main__":
     from sqlalchemy.orm import sessionmaker
     from db import models
     from utilities.session import session_scope
-    from settings import DB_URL
+    from config.settings import DB_URL
 
     ci_name = "래몽래인"
     DELISTING = "공모철회"

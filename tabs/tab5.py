@@ -18,6 +18,9 @@ async def extract_data_from_table1(soup):
         trs = table.select("tr")[2:-1]
         for tr in trs:
             tds = tr.select("td")
+            empty_string = tds[0].text.strip().replace(" ", "")
+            if not empty_string:
+                break
             temp = []
             for td in tds:
                 temp.append(td.text)
@@ -93,7 +96,8 @@ if __name__ == "__main__":
     async def main():
 
         #        code = "B202010131"
-        code = "B202010131"
+        # code = "B202010131"
+        code = "B202105031"
         prediction_result, general_result = await scrape_ipostock(code)
 
         from schemas.general import GeneralCreateSchema
@@ -102,8 +106,8 @@ if __name__ == "__main__":
         g = GeneralCreateSchema(**general_result)
         s = [PredictionCreateSchema(**data) for data in prediction_result or []]
 
-        print(g)
-        print(s)
+        # print(g)
+        # print(s)
         # from pprint import pprint as pp
 
         # # pp(g.dict())

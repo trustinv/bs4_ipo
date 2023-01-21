@@ -44,25 +44,28 @@ async def extract_data_from_table3(table, url):
     result = []
     categories1 = []
     categories2 = []
-
-    for idx, i in enumerate(tds[1:]):
+    for raw in tds[1:]:
+        raw_text = raw.text.replace(" ", "").strip()
+        if not raw_text:
+            break
+        # break
         if flag == 1:
-            if "유통가능" in i.text:
+            if "유통가능" in raw_text:
                 flag = 2
                 continue
-            categories1.append(i.text)
+            categories1.append(raw_text)
         else:
-            categories2.append(i.text)
+            categories2.append(raw_text)
 
     async def nesten_list(temp):
         return list(map(list, zip(*[iter(temp)] * 5)))
 
     temp3 = await nesten_list(categories1)
     temp4 = await nesten_list(categories2)
-    for i in temp3:
-        i.insert(0, 1)
-    for j in temp4:
-        j.insert(0, 2)
+    for raw in temp3:
+        raw.insert(0, 1)
+    for raw in temp4:
+        raw.insert(0, 2)
     result = [dict(zip(keys, lst)) for lst in temp3 + temp4]
     return result
 
@@ -85,36 +88,23 @@ async def scrape_ipostock(code):
         extract_data_from_table2(table2),
         extract_data_from_table3(table3, url),
     )
-
     return {**t1, **t2}, t3
 
 
 if __name__ == "__main__":
 
     async def main():
-
         #        code = "B202111241"
-
-        code = "B202010131"
+        code = "B202109161"
         general_result, shareholder_results = await scrape_ipostock(code)
         from schemas.general import GeneralCreateSchema
         from schemas.shareholder import ShareholderCreateSchema
 
-        # pp(shareholder_result)
-        # pp(general_result)
         g = GeneralCreateSchema(**general_result)
         s = [ShareholderCreateSchema(**shareholder) for shareholder in shareholder_results]
 
-        pp(g.dict())
-
-        # print("*" * 100)
-        # print(s, len(s))
-        pp(s[0].dict())
-        pp(s[1].dict())
-        pp(s[2].dict())
-        pp(s[3].dict())
-        pp(s[4].dict())
-        pp(s[5].dict())
-        pp(s[6].dict())
+        # pp(g.dict())
+        for i in s:
+            print(i)
 
     asyncio.run(main())
