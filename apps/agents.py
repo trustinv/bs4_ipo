@@ -1,7 +1,7 @@
 import random
 
 
-def get_user_agents():
+async def get_user_agents():
     user_agents = [
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:38.0) Gecko/20100101 Firefox/38.0",
         "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0",
@@ -18,4 +18,4 @@ def get_user_agents():
         "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:45.0) Gecko/20100101 Firefox/45.0",
         "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:41.0) Gecko/20100101 Firefox/41.0",
     ]
-    return user_agents[random.randint(0, len(user_agents) - 1)]
+    return {"User-Agent": user_agents[random.randint(0, len(user_agents) - 1)]}

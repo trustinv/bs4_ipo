@@ -5,11 +5,10 @@ import re
 from datetime import datetime
 
 import bs4
-import requests
 from bs4 import BeautifulSoup
 from db.dals.company_dal import Company
 from utilities.time_measure import timeit
-
+from apps.agents import get_user_agents
 
 시작년 = 2021
 마지막년 = 2024
@@ -46,7 +45,7 @@ async def get_years(year):
 
 
 async def scrape_company_codes(year=2021):
-
+    header = await get_user_agents()
     async for year in get_years(year):
         # ipo_companies_in_year = 0
         # delisted_companies_in_year = 0
@@ -63,7 +62,7 @@ async def scrape_company_codes(year=2021):
 
             try:
                 async with aiohttp.ClientSession() as session:
-                    async with session.get(url) as resp:
+                    async with session.get(url, headers=header) as resp:
                         soup = BeautifulSoup(await resp.text(), "lxml")
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:

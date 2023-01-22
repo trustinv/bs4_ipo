@@ -3,7 +3,7 @@ import company_code
 
 import a_tags
 from config.settings import settings
-from tabs import tab1, tab2, tab3, tab4, tab5
+from apps.tabs import tab1, tab2, tab3, tab4, tab5
 
 from db.config import engine, async_session
 from db.dals.company_dal import Company
@@ -12,6 +12,7 @@ from schemas.subscriber import SubscriberCreateSchema
 from schemas.financial import FinancialCreateSchema
 from schemas.shareholder import ShareholderCreateSchema
 from schemas.prediction import PredictionCreateSchema
+from utilities.time_measure import timeit
 
 IPO_URL = settings.IPO_URL
 
@@ -59,6 +60,7 @@ async def get_companies(company_codes):
         yield k
 
 
+@timeit
 async def main():
     # for i in range(100):
     count = 0

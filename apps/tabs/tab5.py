@@ -2,6 +2,7 @@ import asyncio
 import aiohttp
 
 from bs4 import BeautifulSoup
+from apps.agents import get_user_agents
 
 
 async def extract_data_from_table1(soup):
@@ -72,10 +73,11 @@ async def extract_data_from_table2(soup):
 
 async def scrape_ipostock(code):
     url = f"http://www.ipostock.co.kr/view_pg/view_05.asp?code={code}"
-
+    header = await get_user_agents()
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
+
+            async with session.get(url, headers=header) as resp:
                 soup = BeautifulSoup(await resp.text(), "lxml")
             soup = BeautifulSoup(await resp.text(), "lxml")
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:

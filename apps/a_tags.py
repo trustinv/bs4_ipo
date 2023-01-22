@@ -1,15 +1,17 @@
 import re
 import asyncio
 import aiohttp
+
 from bs4 import BeautifulSoup
-from agents import get_user_agents
+from apps.agents import get_user_agents
 
 
 async def scrape_categories(url, code=None):
     url = f"{url}/view_01.asp?code={code}"
+    header = await get_user_agents()
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
+            async with session.get(url, headers=header) as resp:
                 soup = BeautifulSoup(await resp.text(), "lxml")
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         print("Request failed, retrying in 5 seconds...")

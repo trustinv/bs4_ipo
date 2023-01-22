@@ -2,10 +2,11 @@ import aiohttp
 import asyncio
 import math
 import pandas as pd
+from apps.agents import get_user_agents
 
 
 async def scrape_ipostock(code):
-    print("tab3 company code", code)
+    header = await get_user_agents()
     url = f"http://www.ipostock.co.kr/view_pg/view_03.asp?code={code}"
     keys = [
         "ci_category1",
@@ -23,7 +24,7 @@ async def scrape_ipostock(code):
         "ci_net_income",
     ]
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
+        async with session.get(url, headers=header) as resp:
             data = await resp.text()
 
     df = pd.read_html(data)

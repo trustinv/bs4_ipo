@@ -1,10 +1,8 @@
 import asyncio
 import aiohttp
-import time
-import requests
-from pprint import pprint as pp
 
 from bs4 import BeautifulSoup
+from apps.agents import get_user_agents
 
 
 async def get_capital_n_stcks(table):
@@ -71,10 +69,11 @@ async def extract_data_from_table3(table, url):
 
 
 async def scrape_ipostock(code):
+    header = await get_user_agents()
     url = f"http://www.ipostock.co.kr/view_pg/view_02.asp?code={code}"
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(url) as resp:
+            async with session.get(url, headers=header) as resp:
                 soup = BeautifulSoup(await resp.text(), "lxml")
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         print("Request failed, retrying in 5 seconds...")
