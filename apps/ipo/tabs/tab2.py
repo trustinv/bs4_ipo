@@ -49,7 +49,7 @@ async def convert_ci_current_ratio(value):
 async def extract_data_from_table3(table):
     try:
         ci_current_ratio = table.select("tr")[-2].select_one("td:nth-child(4) > b").text
-
+        ci_current_ratio = await convert_ci_current_ratio(ci_current_ratio)
         keys = [
             "ci_category",
             "ci_category_name",
