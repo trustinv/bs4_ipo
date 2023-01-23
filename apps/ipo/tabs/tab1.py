@@ -1,12 +1,17 @@
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
-from apps.agents import get_user_agents
+from apps.ipo.agents import get_user_agents
+from config.config_log import logging
+
+logger = logging.getLogger("info-logger")
 
 
 async def face_value(soup):
     ci_face_value = None
     tds = soup.select('table[width="390"] td')
+    if not tds:
+        logger.error("액면가를 가져 올수 없습니다. html tag를 확인하세요.")
     for idx, td in enumerate(tds):
         font = td.select_one("font")
         if font and font.get_text() == "액면가":
@@ -16,9 +21,14 @@ async def face_value(soup):
 
 
 async def extract_data_from_table1(table):
-    data2 = table.select_one(".view_tit").get_text()
-    data3 = table.select_one(".view_txt01").get_text()
-    data1 = table.select_one("img")["src"]
+    try:
+        data2 = table.select_one(".view_tit").get_text()
+        data3 = table.select_one(".view_txt01").get_text()
+        data1 = table.select_one("img")["src"]
+    except KeyError as err:
+        logger.error(err)
+    except AttributeError as err:
+        logger.error(err)
     return {"ci_market_separation": data1, "ci_name": data2, "ci_code": data3}
 
 
@@ -41,11 +51,16 @@ async def extract_data_from_table2(table):
 
     result = []
     trs = table.select("tr")
-    for idx_tr, tr in enumerate(trs):
-        tds = tr.select("td.txt")
-        result.extend(td.text if td.text is not None else "" for td in tds)
-    result = dict(zip(keys, result))
-    return result
+    try:
+        if not trs:
+            logger.error("html 태그에 접근 할 수 없습니다.")
+        for idx_tr, tr in enumerate(trs):
+            tds = tr.select("td.txt")
+            result.extend(td.text if td.text is not None else "" for td in tds)
+        result = dict(zip(keys, result))
+        return result
+    except AttributeError as err:
+        logger.error(err)
 
 
 async def extract_data_from_table3(table):
@@ -63,10 +78,13 @@ async def extract_data_from_table3(table):
         "ci_po_expected_amount",
         "ci_listing_expected_stocks",
     ]
-    tds = table.select('tr > td[width="240"]')
-    result = [td.text if td.text is not None else "" for td in tds]
-    result = dict(zip(keys, result))
-    return result
+    try:
+        tds = table.select('tr > td[width="240"]')
+        result = [td.text if td.text is not None else "" for td in tds]
+        result = dict(zip(keys, result))
+        return result
+    except AttributeError as err:
+        logger.error(err)
 
 
 async def scrape_ipostock(code):
@@ -76,23 +94,26 @@ async def scrape_ipostock(code):
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=header) as resp:
                 soup = BeautifulSoup(await resp.text(), "lxml")
+
+        table1 = soup.find("table", width="550", style="margin:0 auto;")
+        table2, table3 = soup.select('table[width="780"][class="view_tb"]')
+
+        if not table1 or not table2 or not table3:
+            logger.error("html 태그 속성을 통해 데이터를 파싱 할 수 없습니다. ")
+
+        face_value_result, t1, t2, t3 = await asyncio.gather(
+            face_value(soup),
+            extract_data_from_table1(table1),
+            extract_data_from_table2(table2),
+            extract_data_from_table3(table3),
+        )
+
+        result = {"ci_face_value": face_value_result, **t1, **t2, **t3}
+        return result
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-        print("Request failed, retrying in 5 seconds...")
-        print(e)
+        logger.error("Request failed, retrying in 5 seconds...")
+        logger.error(e)
         await asyncio.sleep(0.3)
-
-    table1 = soup.find("table", width="550", style="margin:0 auto;")
-    table2, table3 = soup.select('table[width="780"][class="view_tb"]')
-
-    face_value_result, t1, t2, t3 = await asyncio.gather(
-        face_value(soup),
-        extract_data_from_table1(table1),
-        extract_data_from_table2(table2),
-        extract_data_from_table3(table3),
-    )
-
-    result = {"ci_face_value": face_value_result, **t1, **t2, **t3}
-    return result
 
 
 if __name__ == "__main__":

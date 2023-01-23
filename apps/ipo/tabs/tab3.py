@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 import math
 import pandas as pd
-from apps.agents import get_user_agents
+from apps.ipo.agents import get_user_agents
 
 
 async def scrape_ipostock(code):

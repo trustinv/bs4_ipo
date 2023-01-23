@@ -4,7 +4,7 @@ import re
 
 from bs4 import BeautifulSoup
 from retry import retry
-from apps.agents import get_user_agents
+from apps.ipo.agents import get_user_agents
 
 
 async def extract_data_from_table1(table):

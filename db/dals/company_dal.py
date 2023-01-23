@@ -1,7 +1,6 @@
 import asyncio
 from typing import List, Optional
 from sqlalchemy import and_, func, select, update, insert
-
 from config.settings import settings
 
 from utilities.time_measure import timeit
@@ -40,24 +39,31 @@ class Company:
         return True
 
     async def get_all_companies(self) -> List[General]:
-        q = await self.db_session.execute(select(General).order_by(General.id))
+        q = await self._db_session.execute(select(General).order_by(General.id))
         return q.scalars().all()
+
+    async def get_all_delisted_companies_name(self) -> List[str]:
+        q = await self._db_session.execute(
+            select([General.ci_name])
+            .where(General.ci_demand_forecast_date != DELISTING)
+            .order_by(General.ci_datetime)
+        )
+        return [row[0][:10] for row in q]
 
     async def read(self, ci_name: str):
         q = await self._db_session.execute(select(General).where(General.ci_name == ci_name))
         return q.scalars().first()
 
-    # async def delist(self, ci_name: str):
-    #     async with self._db_session() as session:
-    #         query = (
-    #             update(cig)
-    #             .where(cig.ci_name == ci_name, cig.ci_demand_forecast_date != DELISTING)
-    #             .values({cig.ci_demand_forecast_date: DELISTING})
-    #         )
-    #         result = await session.execute(query)
-    #         affected_rows = result.rowcount
-    #         await session.commit()
-    #         return affected_rows
+    async def delist(self, ci_name: str):
+        query = (
+            update(General)
+            .where(General.ci_name == ci_name, General.ci_demand_forecast_date != DELISTING)
+            .values({General.ci_demand_forecast_date: DELISTING})
+        )
+        result = await self._db_session.execute(query)
+        affected_rows = result.rowcount
+        await self._db_session.commit()
+        return affected_rows
 
 
 if __name__ == "__main__":
@@ -67,14 +73,24 @@ if __name__ == "__main__":
     async def main():
         async with async_session() as session:
             async with session.begin():
-                company_dal = Company(session)
-                await company_dal.create(
-                    raw_data.general_dict,
-                    raw_data.shareholders_dict,
-                    raw_data.financials_dict,
-                    raw_data.subscribers_dict,
-                    raw_data.predictions_dict,
-                )
+                company_dal: General = Company(session)
+                # await company_dal.create(
+                #     raw_data.general_dict,
+                #     raw_data.shareholders_dict,
+                #     raw_data.financials_dict,
+                #     raw_data.subscribers_dict,
+                #     raw_data.predictions_dict,
+                # )
+                #     r: General = await company_dal.read("툴젠")
+                #     print(r.ci_name, r.ci_demand_forecast_date)
+                # async with session.begin():
+                #     r = await company_dal.delist(r.ci_name)
+                #     print(r)
+                # async with session.begin():
+                #     r: General = await company_dal.read("툴젠")
+                #     print(r.ci_name, r.ci_demand_forecast_date)
+                r = await company_dal.get_all_delisted_companies_name()
+                print(r, len(r))
         await engine.dispose()
 
     asyncio.run(main(), debug=True)

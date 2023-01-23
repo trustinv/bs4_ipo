@@ -3,10 +3,14 @@ import asyncio
 import aiohttp
 
 from bs4 import BeautifulSoup
-from apps.agents import get_user_agents
+from apps.ipo.agents import get_user_agents
+from config.config_log import logging
+
+logger = logging.getLogger("info-logger")
 
 
 async def scrape_categories(url, code=None):
+    logger.debug("진입")
     url = f"{url}/view_01.asp?code={code}"
     header = await get_user_agents()
     try:
@@ -14,8 +18,8 @@ async def scrape_categories(url, code=None):
             async with session.get(url, headers=header) as resp:
                 soup = BeautifulSoup(await resp.text(), "lxml")
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-        print("Request failed, retrying in 5 seconds...")
-        print(e)
+        logger.error("Request failed, retrying in 5 seconds...")
+        logger.error(e)
         await asyncio.sleep(0.3)
 
     category_path = [a.get("href") for a in soup.find_all("a", href=re.compile("view_0[1-5]"))]
@@ -24,6 +28,8 @@ async def scrape_categories(url, code=None):
         extracted_numbers = [re.search(pattern, item).group() for item in category_path]
         result = [int(number) for number in extracted_numbers]
         return result
+    else:
+        logger.error("태그에서 기업코드를 가져올 수 없습니다.")
 
 
 if __name__ == "__main__":

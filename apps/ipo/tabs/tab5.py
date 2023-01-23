@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 
 from bs4 import BeautifulSoup
-from apps.agents import get_user_agents
+from apps.ipo.agents import get_user_agents
 
 
 async def extract_data_from_table1(soup):
