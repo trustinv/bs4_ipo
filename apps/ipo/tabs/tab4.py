@@ -1,3 +1,4 @@
+from typing import List, Dict, Union
 import asyncio
 import aiohttp
 import re
@@ -7,7 +8,17 @@ from retry import retry
 from apps.ipo.agents import get_user_agents
 
 
-async def extract_data_from_table1(table):
+async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, str]:
+    """
+    Extracts data from the first table in the HTML page and returns a dictionary with keys as the data categories
+    and values as the data for each category.
+
+    Parameters:
+    - table (BeautifulSoup): The BeautifulSoup object representing the first table in the HTML page.
+
+    Returns:
+    - Dict[str, str]: A dictionary containing the extracted data.
+    """
     keys = [
         "ci_big_ir_plan",
         "ci_demand_forecast_date",
@@ -21,7 +32,17 @@ async def extract_data_from_table1(table):
     return result
 
 
-async def extract_data_from_table2(talbe):
+async def extract_data_from_table2(table: BeautifulSoup) -> Dict[str, str]:
+    """
+    Extracts data from the second table in the HTML page and returns a dictionary with keys as the data categories
+    and values as the data for each category.
+
+    Parameters:
+    - table (BeautifulSoup): The BeautifulSoup object representing the second table in the HTML page.
+
+    Returns:
+    - Dict[str, str]: A dictionary containing the extracted data.
+    """
     keys = [
         "ci_hope_po_price",
         "ci_hope_po_amount",
@@ -31,7 +52,7 @@ async def extract_data_from_table2(talbe):
         "ci_subscription_competition_rate",
     ]
     result = []
-    for idx, tr in enumerate(talbe, 1):
+    for idx, tr in enumerate(table, 1):
         if idx % 2 == 0:
             tds = tr.select("td")
             for jdx, td in enumerate(tds):
@@ -41,7 +62,17 @@ async def extract_data_from_table2(talbe):
     return result
 
 
-async def extract_data_from_table3(table):
+async def extract_data_from_table3(table: BeautifulSoup) -> Dict[str, str]:
+    """
+    Extracts data from the third table in the HTML page and returns a dictionary with keys as the data categories
+    and values as the data for each category.
+
+    Parameters:
+    - table (BeautifulSoup): The BeautifulSoup object representing the third table in the HTML page.
+
+    Returns:
+    - Dict[str, str]: A dictionary containing the extracted data.
+    """
     keys = [
         "ci_professional_investor_stock",
         "ci_professional_investor_rate",
@@ -63,7 +94,17 @@ async def extract_data_from_table3(table):
     return result
 
 
-async def extract_data_from_table4(table):
+async def extract_data_from_table4(table: BeautifulSoup) -> List[Dict[str, str]]:
+    """
+    Extracts data from the fourth table in the HTML page and returns a list of dictionaries, where each dictionary
+    represents a row of data, with keys as the data categories and values as the data for each category.
+
+    Parameters:
+    - table (BeautifulSoup): The BeautifulSoup object representing the fourth table in the HTML page.
+
+    Returns:
+    - List[Dict[str, str]]: A list of dictionaries containing the extracted data.
+    """
     keys = [
         "ci_stock_firm",
         "ci_assign_quantity",
@@ -84,7 +125,16 @@ async def extract_data_from_table4(table):
 
 
 @retry(tries=3, delay=5)
-async def scrape_ipostock(code):
+async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str], List[Dict[str, str]]]]:
+    """
+    Scrapes financial data for a given company code from the website ipostock.co.kr.
+
+    Parameters:
+    - code (str): The company code to scrape financial data for.
+
+    Returns:
+    - Dict[str, Union[str, Dict[str, str], List[Dict[str, str]]]]: A dictionary containing the scraped financial data.
+    """
     header = await get_user_agents()
     url = f"http://www.ipostock.co.kr/view_pg/view_04.asp?code={code}"
 
@@ -119,7 +169,7 @@ if __name__ == "__main__":
         code = "B202010131"
         general_result, subscriber_results = await scrape_ipostock(code)
         from pprint import pprint as pp
-
+        print(general_result)
         # pp(subscriber_results)
         from schemas.general import GeneralCreateSchema
         from schemas.subscriber import SubscriberCreateSchema
@@ -131,8 +181,8 @@ if __name__ == "__main__":
 
         from pprint import pprint as pp
 
-        print(g)
-        print(s)
+        # print(g)
+        # print(s)
         # gi = g.dict()
         # print(gi["ci_demand_forecast_date"])
         # print(gi["ci_appraised_price"])

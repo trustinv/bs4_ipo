@@ -1,3 +1,4 @@
+from typing import List
 import re
 import asyncio
 import aiohttp
@@ -9,7 +10,18 @@ from config.config_log import logging
 logger = logging.getLogger("info-logger")
 
 
-async def scrape_categories(url, code=None):
+
+async def scrape_categories(url: str, code: str = None) -> List[int]:
+    """
+    Scrapes data from the webpage for the given stock code and returns a list of integers representing the available category numbers for the company.
+
+    Parameters:
+    - url (str): The base url of the website.
+    - code (str): The stock code of the company.
+
+    Returns:
+    - List[int]: A list of integers containing the available category numbers.
+    """
     logger.debug("진입")
     url = f"{url}/view_01.asp?code={code}"
     header = await get_user_agents()

@@ -1,3 +1,4 @@
+from typing import Type, Union, List, Dict
 import aiohttp
 import asyncio
 import math
@@ -5,7 +6,18 @@ import pandas as pd
 from apps.ipo.agents import get_user_agents
 
 
-async def scrape_ipostock(code):
+async def scrape_ipostock(code: str) -> List[Dict[str, Union[str, float]]]:
+    """
+    Scrapes financial data for a given company code from the website ipostock.co.kr.
+
+    Parameters:
+    - code (str): The company code to scrape financial data for.
+
+    Returns:
+    - List[Dict[str, Union[str, float]]]: A list of dictionaries containing the scraped financial data. Each dictionary
+      represents one row of data, with keys corresponding to the financial data categories and values representing the
+      values for that category.
+    """
     header = await get_user_agents()
     url = f"http://www.ipostock.co.kr/view_pg/view_03.asp?code={code}"
     keys = [

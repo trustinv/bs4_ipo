@@ -5,13 +5,15 @@ from config.settings import settings
 
 from utilities.time_measure import timeit
 from sqlalchemy.orm import Session
+from db.models import (
+    CompanyInfoShareholder as Shareholder,
+    CompanyInfoFinancial as Financial,
+    CompanyInfoSubscriber as Subscriber,
+    CompanyInfoPrediction as Prediction,
+    CompanyInfoGeneral as General,
+    AppCalendar as Calendar
+)
 
-from db import models
-from db.models import CompanyInfoGeneral as General
-from db.models import CompanyInfoShareholder as Shareholder
-from db.models import CompanyInfoFinancial as Financial
-from db.models import CompanyInfoSubscriber as Subscriber
-from db.models import CompanyInfoPrediction as Prediction
 from db.config import async_session, engine
 
 DELISTING = settings.DELISTING
@@ -21,18 +23,20 @@ class Company:
     def __init__(self, db_session: Session):
         self._db_session = db_session
 
-    async def create(self, *args, **kwargs):
-        general = kwargs["general"]
-        shareholders = kwargs["shareholders"]
-        financials = kwargs["financials"]
-        subscribers = kwargs["subscribers"]
-        predictions = kwargs["predictions"]
+    async def create(self, general: dict,
+    shareholders: List[dict],
+    financials: List[dict],
+    subscribers: List[dict],
+    predictions: List[dict],
+    calendars: List[dict],
+    ) -> bool:
 
-        new_company = models.CompanyInfoGeneral(**general)
+        new_company =General(**general)
         new_company.shareholders = [Shareholder(**shareholder) for shareholder in shareholders]
         new_company.financials = [Financial(**financial) for financial in financials]
         new_company.subscribers = [Subscriber(**subscriber) for subscriber in subscribers]
         new_company.predictions = [Prediction(**prediction) for prediction in predictions]
+        new_company.app_calendars = [Calendar(**calendar) for calendar in calendars]
 
         self._db_session.add(new_company)
         await self._db_session.flush()
@@ -50,11 +54,11 @@ class Company:
         )
         return [row[0][:10] for row in q]
 
-    async def read(self, ci_name: str):
+    async def read(self, ci_name: str) -> Optional[General]:
         q = await self._db_session.execute(select(General).where(General.ci_name == ci_name))
         return q.scalars().first()
 
-    async def delist(self, ci_name: str):
+    async def delist(self, ci_name: str) -> int:
         query = (
             update(General)
             .where(General.ci_name == ci_name, General.ci_demand_forecast_date != DELISTING)

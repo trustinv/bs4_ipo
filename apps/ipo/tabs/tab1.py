@@ -1,3 +1,5 @@
+from typing import Dict, Union
+
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
@@ -7,7 +9,10 @@ from config.config_log import logging
 logger = logging.getLogger("info-logger")
 
 
-async def face_value(soup):
+async def face_value(soup: BeautifulSoup) -> str:
+    """
+    Returns the face value of a stock from the given BeautifulSoup object
+    """
     ci_face_value = None
     tds = soup.select('table[width="390"] td')
     if not tds:
@@ -19,34 +24,39 @@ async def face_value(soup):
             break
     return ci_face_value or "0"
 
-
-async def extract_data_from_table1(table):
+async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, Union[str, int]]:
+    """
+    Extracts data from the first table of the provided BeautifulSoup object and returns a dictionary
+    """
     try:
         data2 = table.select_one(".view_tit").get_text()
         data3 = table.select_one(".view_txt01").get_text()
         data1 = table.select_one("img")["src"]
+        return {"ci_market_separation": data1, "ci_name": data2, "ci_code": data3}
     except KeyError as err:
         logger.error(err)
     except AttributeError as err:
         logger.error(err)
-    return {"ci_market_separation": data1, "ci_name": data2, "ci_code": data3}
 
 
-async def extract_data_from_table2(table):
+async def extract_data_from_table2(table: BeautifulSoup) -> Dict[str, str]:
+    """
+    Extracts data from the second table of the provided BeautifulSoup object and returns a dictionary
+    """
     keys = [
-        "ci_ceo",
-        "ci_establishment_date",
-        "ci_company_separation",
-        "ci_brn",
-        "ci_tel",
-        "ci_homepage",
-        "ci_settlement_month",
-        "ci_worker_cnt",
-        "ci_industries",
-        "ci_important_product",
-        "ci_stocks_separation",
-        "ci_lead_manager",
-        "ci_address",
+    "ci_ceo",
+    "ci_establishment_date",
+    "ci_company_separation",
+    "ci_brn",
+    "ci_tel",
+    "ci_homepage",
+    "ci_settlement_month",
+    "ci_worker_cnt",
+    "ci_industries",
+    "ci_important_product",
+    "ci_stocks_separation",
+    "ci_lead_manager",
+    "ci_address",
     ]
 
     result = []
@@ -54,7 +64,7 @@ async def extract_data_from_table2(table):
     try:
         if not trs:
             logger.error("html 태그에 접근 할 수 없습니다.")
-        for idx_tr, tr in enumerate(trs):
+        for tr in trs:
             tds = tr.select("td.txt")
             result.extend(td.text if td.text is not None else "" for td in tds)
         result = dict(zip(keys, result))
@@ -62,8 +72,10 @@ async def extract_data_from_table2(table):
     except AttributeError as err:
         logger.error(err)
 
-
-async def extract_data_from_table3(table):
+async def extract_data_from_table3(table: BeautifulSoup) -> Dict[str, str]:
+    """
+    Extracts data from the third table of the provided BeautifulSoup object and returns a dictionary
+    """
     keys = [
         "ci_review_c_date",
         "ci_review_a_date",
@@ -87,7 +99,10 @@ async def extract_data_from_table3(table):
         logger.error(err)
 
 
-async def scrape_ipostock(code):
+async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str]]]:
+    """
+    Scrapes data from ipostock website using the provided code and returns a dictionary of the extracted data
+    """
     header = await get_user_agents()
     url = f"http://www.ipostock.co.kr/view_pg/view_01.asp?code={code}"
     try:

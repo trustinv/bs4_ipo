@@ -1,3 +1,5 @@
+
+from typing import List, Dict, Union, Tuple
 import asyncio
 import aiohttp
 
@@ -5,7 +7,18 @@ from bs4 import BeautifulSoup
 from apps.ipo.agents import get_user_agents
 
 
-async def extract_data_from_table1(soup):
+async def extract_data_from_table1(soup: BeautifulSoup) -> List[Dict[str, str]]:
+    """
+    Extracts data from the first table in the HTML page and returns a list of dictionaries, where each dictionary
+    represents a row of data, with keys as the data categories and values as the data for each category.
+
+    Parameters:
+    - soup (BeautifulSoup): The BeautifulSoup object representing the HTML page.
+
+    Returns:
+    - List[Dict[str, str]]: A list of dictionaries containing the extracted data.
+    """
+
     try:
         keys = [
             "ci_price",
@@ -43,7 +56,17 @@ async def extract_data_from_table1(soup):
         return result
 
 
-async def extract_data_from_table2(soup):
+async def extract_data_from_table2(soup: BeautifulSoup) -> Dict[str, Union[str, float]]:
+    """
+    Extracts data from the second table in the HTML page and returns a dictionary with keys as the data categories
+    and values as the data for each category.
+
+    Parameters:
+    - soup (BeautifulSoup): The BeautifulSoup object representing the HTML page.
+
+    Returns:
+    - Dict[str, Union[str, float]]: A dictionary containing the extracted data.
+    """
     try:
         table = soup.find_all("table", width="780", cellspacing="1", class_="view_tb2")[-1]
         result = dict(
@@ -71,7 +94,16 @@ async def extract_data_from_table2(soup):
         return result
 
 
-async def scrape_ipostock(code):
+async def scrape_ipostock(code: str) -> Tuple[List[Dict[str, str]], Dict[str, Union[str, float]]]:
+    """
+    Scrapes data from the webpage for the given stock code and returns a tuple of the extracted data from the two tables on the page.
+
+    Parameters:
+    - code (str): The stock code of the company.
+
+    Returns:
+    - Tuple[List[Dict[str, str]], Dict[str, Union[str, float]]]: A tuple containing the extracted data.
+    """
     url = f"http://www.ipostock.co.kr/view_pg/view_05.asp?code={code}"
     header = await get_user_agents()
     try:

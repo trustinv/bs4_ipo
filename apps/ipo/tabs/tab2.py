@@ -1,15 +1,18 @@
 import string
 import asyncio
 import aiohttp
-
+from typing import Dict, Tuple, List
 from bs4 import BeautifulSoup
 from apps.ipo.agents import get_user_agents
 from config.config_log import logging
 
 logger = logging.getLogger("info-logger")
 
-
-async def get_capital_n_stcks(table):
+async def get_capital_n_stcks(table: BeautifulSoup) -> Tuple[str, str]:
+    """
+    Given a BeautifulSoup object of an html table, this function extracts the capital and stocks information 
+    and returns it as a tuple in the format (capital, stocks)
+    """
     try:
         capital = table.select_one('td[width="*"]').get_text().split("억원")[0].strip()
         stocks = (
@@ -24,18 +27,24 @@ async def get_capital_n_stcks(table):
     except AttributeError as err:
         logger.error(err)
 
-
-async def extract_data_from_table1(table):
+async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, str]:
+    """
+    Given a BeautifulSoup object of an html table, this function extracts the data from table1 and returns it in a dictionary.
+    """
     capital, stocks = await get_capital_n_stcks(table)
     return dict(ci_before_po_capital=capital, ci_before_po_stocks=stocks)
 
-
-async def extract_data_from_table2(table):
+async def extract_data_from_table2(table: BeautifulSoup) -> Dict[str, str]:
+    """
+    Given a BeautifulSoup object of an html table, this function extracts the data from table2 and returns it in a dictionary.
+    """
     capital, stocks = await get_capital_n_stcks(table)
     return dict(ci_after_po_capital=capital, ci_after_po_stocks=stocks)
 
-
-async def convert_ci_current_ratio(value):
+async def convert_ci_current_ratio(value: str) -> int:
+    """
+    Given a string value, this function converts the value to int and returns it.
+    """
     try:
         if value is None or value in string.whitespace:
             return 0
@@ -45,8 +54,10 @@ async def convert_ci_current_ratio(value):
     except AttributeError as err:
         logger.error(err)
 
-
-async def extract_data_from_table3(table):
+async def extract_data_from_table3(table: BeautifulSoup) -> Tuple[List[Dict[str, str]], Dict[str, int]]:
+    """
+    Given a BeautifulSoup object of an html table, this function extracts the data from table3 and returns it in a tuple in the format (data, ci_current_ratio)
+    """
     try:
         ci_current_ratio = table.select("tr")[-2].select_one("td:nth-child(4) > b").text
         ci_current_ratio = await convert_ci_current_ratio(ci_current_ratio)
@@ -76,7 +87,7 @@ async def extract_data_from_table3(table):
             else:
                 categories2.append(raw_text)
 
-        async def nesten_list(temp):
+        async def nesten_list(temp: List[str]) -> List[List[str]]:
             return list(map(list, zip(*[iter(temp)] * 5)))
 
         temp3 = await nesten_list(categories1)
@@ -91,7 +102,10 @@ async def extract_data_from_table3(table):
         logger.error(err)
 
 
-async def scrape_ipostock(code):
+async def scrape_ipostock(code: str) -> Tuple[List[Dict[str, str]], Dict[str, str], Dict[str, int]]:
+    """
+    Given a stock code, this function scrapes information from a website and returns it as a tuple in the format (data1, data2, data3)
+    """
     header = await get_user_agents()
     url = f"http://www.ipostock.co.kr/view_pg/view_02.asp?code={code}"
     try:
