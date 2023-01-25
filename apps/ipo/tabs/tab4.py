@@ -1,4 +1,4 @@
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 import asyncio
 import aiohttp
 import re
@@ -7,6 +7,8 @@ from bs4 import BeautifulSoup
 from retry import retry
 from apps.ipo.agents import get_user_agents
 
+async def cancelled_ipo(value: Optional[str]) -> Optional[str]:
+    pass
 
 async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, str]:
     """
@@ -149,6 +151,7 @@ async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str], Lis
         await asyncio.sleep(0.3)
 
     table1, table2, table3, table4, *_ = soup.select("table.view_tb")
+    
 
     t1, t2, t3, t4 = await asyncio.gather(
         extract_data_from_table1(table1),
@@ -157,6 +160,15 @@ async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str], Lis
         extract_data_from_table4(table4),
     )
 
+    cancelled_ipo_css_selector = '#print > table > tr:nth-child(3) > td > table > tr > td:nth-child(1) > table > tr:nth-child(1) > td > table > tr > td:nth-child(2) > font > b'
+    cancelled_ipo = soup.select_one(cancelled_ipo_css_selector)
+    if not cancelled_ipo:
+        is_cancelled = None
+    else:
+        is_cancelled = re.search(r"\[([^]]*)\]", cancelled_ipo.text)
+        cancelled_ipo_text = is_cancelled.group(1)
+        print(cancelled_ipo_text)
+        t1 = {key: cancelled_ipo_text for key in t1}
     return {**t1, **t2, **t3}, t4
 
 

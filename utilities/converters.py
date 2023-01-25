@@ -23,8 +23,9 @@ def change_currency(value):
             if result in string.whitespace:
                 return 0.0
             else:
-                print("ㅇㅕㄱㅣ ㅁㅓ")
-                print(result, type(result))
+                print('오류 발생')
+                pass
+                
 
 
 def remove_whitespace(value):
@@ -77,6 +78,8 @@ def dollar_to_float(value):
 
 def dot_dash_to_slash(value):
     if isinstance(value, str):
+        if value == '공모철회':
+            return value
         value = re.sub(r"[.-]", "/", value)
         return value
     return ""

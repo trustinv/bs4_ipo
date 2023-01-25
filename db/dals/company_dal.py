@@ -80,7 +80,7 @@ class Company:
         subscribers: List[Subscriber],
         predictions: List[Prediction],
         calendars: List[Calendar],
-    ) -> int:
+    ) -> bool:
 
         general.shareholders = []
         general.shareholders = shareholders
@@ -107,7 +107,7 @@ class Company:
         # )
         # result = await self._db_session.execute(query)
         # affected_rows = result.rowcount
-        await self._db_session.commit()
+        # await self._db_session.commit()
         return True
 
     async def upsert(
@@ -122,10 +122,10 @@ class Company:
 
         ci_code = general.ci_code
         general = General(**general.dict())
-        shareholders = [Shareholder(**shareholder) for shareholder in shareholders]
-        financials = [Financial(**financial) for financial in financials]
-        subscribers = [Subscriber(**subscriber) for subscriber in subscribers]
-        predictions = [Prediction(**prediction) for prediction in predictions]
+        shareholders = [Shareholder(**shareholder.dict()) for shareholder in shareholders]
+        financials = [Financial(**financial.dict()) for financial in financials]
+        subscribers = [Subscriber(**subscriber.dict()) for subscriber in subscribers]
+        predictions = [Prediction(**prediction.dict()) for prediction in predictions]
         calendars = [Calendar(**calendar.dict()) for calendar in calendars]
 
         existed_ci_code = await self.read(ci_code)
@@ -147,12 +147,12 @@ class Company:
 
         else:
             result = await self.create(
-                general=general,
-                shareholders=shareholders,
-                financials=financials,
-                subscribers=subscribers,
-                predictions=predictions,
-                calendars=calendars,
+                general,
+                shareholders,
+                financials,
+                subscribers,
+                predictions,
+                calendars,
             )
             if result:
                 logger.info("기업 데이터를 등록 하였습니다")

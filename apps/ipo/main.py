@@ -29,33 +29,26 @@ async def parse_appcalendar_data(**kwargs):
         ci_refund_date=(3, "환불일"),
         ci_payment_date=(4, "납입일"),
     )
+    ci_public_subscription_date = False if kwargs.get('ci_public_subscription_date') == '공모철회' else kwargs.get('ci_public_subscription_date')
     ac_company_name = kwargs.pop("ci_name")
 
     result = []
-
     for key, value in kwargs.items():
-        ac_sdate = ""
-        ac_edate = ""
-        ac_category = 0
-        ac_category_name = ""
-        ac_company_name = ""
-
-        value = value.replace(".", "-")
+        ac_category, ac_category_name = date_criteria.get(key)
         match = re.search(r"\d{4}", value)
         if match:
-            year = match.group()
-            ac_category, ac_category_name = date_criteria.get(key)
             start_end = value.split("~")
-
             if ac_category_name in ("환불일", "납입일"):
-                ac_sdate = ac_edate = start_end[0].replace(".", "-")
+                ac_sdate = ac_edate = start_end[0]
             else:
                 ac_sdate, end = start_end
-                ac_edate = f"{year}-{end.strip().replace('.', '-')}"
-            result.append(
+                ac_edate = f"{match.group()}-{end.strip()}"
+
+            if not ci_public_subscription_date:
+                result.append(
                 dict(
-                    ac_sdate=ac_sdate,
-                    ac_edate=ac_edate,
+                    ac_sdate='공모철회',
+                    ac_edate='공모철회',
                     ac_category=ac_category,
                     ac_category_name=ac_category_name,
                     ac_company_name=ac_company_name,
@@ -63,6 +56,18 @@ async def parse_appcalendar_data(**kwargs):
                     ac_datetime=datetime.datetime.now(),
                 )
             )
+            else:
+                result.append(
+                    dict(
+                        ac_sdate=ac_sdate,
+                        ac_edate=ac_edate,
+                        ac_category=ac_category,
+                        ac_category_name=ac_category_name,
+                        ac_company_name=ac_company_name,
+                        ac_vitalize=1,
+                        ac_datetime=datetime.datetime.now(),
+                    )
+                )
     return result
 
 
@@ -106,11 +111,11 @@ async def start_scrape(categories, code):
     result = dict(
         general=general,
         shareholders=[
-            ShareholderCreateSchema(**shareholder).dict() for shareholder in shareholders
+            ShareholderCreateSchema(**shareholder) for shareholder in shareholders
         ],
-        subscribers=[SubscriberCreateSchema(**subscriber).dict() for subscriber in subscribers],
-        financials=[FinancialCreateSchema(**financial).dict() for financial in financials],
-        predictions=[PredictionCreateSchema(**prediction).dict() for prediction in predictions],
+        subscribers=[SubscriberCreateSchema(**subscriber) for subscriber in subscribers],
+        financials=[FinancialCreateSchema(**financial) for financial in financials],
+        predictions=[PredictionCreateSchema(**prediction) for prediction in predictions],
         calendars=[CalendarCreateSchema(**calendar) for calendar in parsed_appcalendar_result],
     )
     return result
