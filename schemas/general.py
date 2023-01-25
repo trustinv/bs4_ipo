@@ -196,10 +196,10 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_listing_expected_stocks", pre=True)
     def convert_ci_listing_expected_stocks(cls, value):
-        result = converters.only_digits(value).strip()
-        result = result.strip()
+        result = converters.only_digits(value)
         if result is None or result in string.whitespace:
             return 0
+        result = result.strip()
         return int(result)
 
     @validator("ci_before_po_capital", pre=True)
@@ -245,41 +245,57 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_professional_investor_stock", pre=True)
     def convert_ci_professional_investor_stock(cls, value):
+        if isinstance(value, int):
+            return value
         value = int(converters.only_digits(value))
         return value
 
     @validator("ci_professional_investor_rate", pre=True)
     def convert_ci_professional_investor_rate(cls, value):
+        if isinstance(value, int):
+            return value
         value = value.split("%")[0].replace(".", "").strip()
         return int(value)
 
     @validator("ci_esa_stock", pre=True)
     def convert_ci_esa_stock(cls, value):
+        if isinstance(value, int):
+            return value
         value = int(converters.only_digits(value))
         return value
 
     @validator("ci_esa_rate", pre=True)
     def convert_ci_esa_rate(cls, value):
+        if isinstance(value, int):
+            return value
         value = value.split("%")[0].strip().replace(" ", "").replace(".", "")
         return int(value)
 
     @validator("ci_general_subscriber_stock", pre=True)
     def convert_ci_general_subscriber_stock(cls, value):
+        if isinstance(value, int):
+            return value
         value = int(converters.only_digits(value))
         return value
 
     @validator("ci_general_subscriber_rate", pre=True)
     def convert_ci_general_subscriber_rate(cls, value):
+        if isinstance(value, int):
+            return value
         value = value.strip().replace(".", "").replace(" ", "").split("%")[0]
         return int(value)
 
     @validator("ci_overseas_investor_stock", pre=True)
     def convert_ci_overseas_investor_stock(cls, value):
+        if isinstance(value, int):
+            return value
         value = int(converters.only_digits(value))
         return value
 
     @validator("ci_overseas_investor_rate", pre=True)
     def convert_ci_overseas_investor_rate(cls, value):
+        if isinstance(value, int):
+            return value
         value = value.strip().replace(" ", "").replace(".", "").split("%")[0]
         return int(value)
 

@@ -3,30 +3,27 @@ from datetime import datetime
 
 from pydantic import BaseModel, validator, Field
 
+
 class CalendarBaseSchema(BaseModel):
-    ac_sdate:str = ''
-    ac_edate:str = ac_sdate
-    ac_category_name:str = ''
-    ac_category:int = ac_category_name
-    ac_company_name:str = ''
-    ac_vitalize:str = 1
-    ac_datetime:datetime = datetime.now()
+    ac_sdate: str = ""
+    ac_edate: str = ac_sdate
+    ac_category_name: str = ""
+    ac_category: int = ac_category_name
+    ac_company_name: str = ""
+    ac_vitalize: str = 1
+    ac_datetime: datetime = datetime.now()
 
 
 class CalendarCreateSchema(CalendarBaseSchema):
     @validator("ac_sdate", pre=True)
     def convert_ac_sdate(cls, value):
-        print('convert_ac_sdate')
-        print(value)
-        start, _ = value.replace(' ', '').replace('/', '-').strip().split('~')
-        return start
+        value = value.replace(" ", "").replace("/", "-").strip()
+        return value
 
     @validator("ac_edate", pre=True)
     def convert_ac_edate(cls, value):
-        print('convert_ac_edate')
-        print(value)
-        _, end = value.replace(' ', '').replace('/', '-').strip().split('~')
-        year = re.search(r'\d{4}', value)
+        end = value.replace(" ", "").replace("/", "-").strip()
+        year = re.search(r"\d{4}", value)
         if year:
             year = year.group()
         e_date = f"{year}-{end}"
@@ -34,39 +31,34 @@ class CalendarCreateSchema(CalendarBaseSchema):
 
     @validator("ac_category", pre=True)
     def convert_ac_category(cls, value):
-        print('convert_ac_category')
-        print(value)
-        if value == 'ci_demand_forecast_date':
+        if value == "ci_demand_forecast_date":
             return 1
-        if value == 'ci_public_subscription_date':
+        if value == "ci_public_subscription_date":
             return 2
-        if value == 'ci_refund_date':
+        if value == "ci_refund_date":
             return 3
-        if value == 'ci_payment_date':
+        if value == "ci_payment_date":
             return 4
         else:
             return 0
 
     @validator("ac_category_name", pre=True)
     def convert_ac_category_name(cls, value):
-        print('convert_ac_category_name')
-        print(value)
-        if value == 'ci_demand_forecast_date':
-            return '수요예측일'
-        if value == 'ci_public_subscription_date':
-            return '공모일'
-        if value == 'ci_refund_date':
-            return '환불일'
-        if value == 'ci_payment_date':
-            return '납입일'
+        if value == "ci_demand_forecast_date":
+            return "수요예측일"
+        if value == "ci_public_subscription_date":
+            return "공모일"
+        if value == "ci_refund_date":
+            return "환불일"
+        if value == "ci_payment_date":
+            return "납입일"
         else:
-            return ''
+            return ""
 
     @validator("ac_company_name", pre=True)
     def convert_ac_company_name(cls, value):
-        print('convert_ac_company_name')
-        print(value)
-        return value
+        return value.strip()
+
 
 class CalendarSchema(BaseModel):
     ac_idx: int = Field(..., title="AC Idx", description="AC Idx")

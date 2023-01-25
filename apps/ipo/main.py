@@ -21,42 +21,51 @@ from config.config_log import logging
 logger = logging.getLogger('info-logger"')
 logger = logging.getLogger("info-logger")
 
+
 async def parse_appcalendar_data(**kwargs):
-    date_criteria = dict(ci_demand_forecast_date=(1, '수요예측일'),
-    ci_public_subscription_date=(2, '공모일'),
-    ci_refund_date=(3,'환불일'),
-    ci_payment_date=(4, '납입일')
+    date_criteria = dict(
+        ci_demand_forecast_date=(1, "수요예측일"),
+        ci_public_subscription_date=(2, "공모일"),
+        ci_refund_date=(3, "환불일"),
+        ci_payment_date=(4, "납입일"),
     )
-    ac_company_name = kwargs.pop('ci_name')
-    
+    ac_company_name = kwargs.pop("ci_name")
+
     result = []
 
     for key, value in kwargs.items():
-        value = value.replace('.', '-')
-        match = re.search(r'\d{4}', value)
+        ac_sdate = ""
+        ac_edate = ""
+        ac_category = 0
+        ac_category_name = ""
+        ac_company_name = ""
+
+        value = value.replace(".", "-")
+        match = re.search(r"\d{4}", value)
         if match:
             year = match.group()
             ac_category, ac_category_name = date_criteria.get(key)
-            start_end = value.split('~')
+            start_end = value.split("~")
 
-            if ac_category_name in("환불일", "납입일"):
-                ac_sdate = ac_edate = start_end[0].replace('.', '-')
+            if ac_category_name in ("환불일", "납입일"):
+                ac_sdate = ac_edate = start_end[0].replace(".", "-")
             else:
-                _, end = start_end
+                ac_sdate, end = start_end
                 ac_edate = f"{year}-{end.strip().replace('.', '-')}"
-            result.append(dict(
-               ac_sdate=ac_sdate,
-               ac_edate=ac_edate,
-               ac_category=ac_category,
-               ac_category_name=ac_category_name,
-               ac_company_name=ac_company_name,
-               ac_vitalize=1,
-               ac_datetime=datetime.datetime.now()
-            ))
+            result.append(
+                dict(
+                    ac_sdate=ac_sdate,
+                    ac_edate=ac_edate,
+                    ac_category=ac_category,
+                    ac_category_name=ac_category_name,
+                    ac_company_name=ac_company_name,
+                    ac_vitalize=1,
+                    ac_datetime=datetime.datetime.now(),
+                )
+            )
     return result
-    
 
-    
+
 async def start_scrape(categories, code):
     shareholders = []
     subscribers = []
@@ -83,28 +92,29 @@ async def start_scrape(categories, code):
             predictions, general_result5 = await tab5.scrape_ipostock(code)
             if general_result5:
                 general_result.update(general_result5)
-    
-    general=GeneralCreateSchema(**general_result)
+
+    general = GeneralCreateSchema(**general_result)
 
     parsed_appcalendar_result = await parse_appcalendar_data(
-        ci_demand_forecast_date = general.ci_demand_forecast_date,
-        ci_public_subscription_date = general.ci_public_subscription_date,
-        ci_refund_date = general.ci_refund_date,
-        ci_payment_date = general.ci_payment_date,
-        ci_name = general.ci_name
+        ci_demand_forecast_date=general.ci_demand_forecast_date,
+        ci_public_subscription_date=general.ci_public_subscription_date,
+        ci_refund_date=general.ci_refund_date,
+        ci_payment_date=general.ci_payment_date,
+        ci_name=general.ci_name,
     )
 
     result = dict(
-        general=general.dict(),
+        general=general,
         shareholders=[
             ShareholderCreateSchema(**shareholder).dict() for shareholder in shareholders
         ],
         subscribers=[SubscriberCreateSchema(**subscriber).dict() for subscriber in subscribers],
         financials=[FinancialCreateSchema(**financial).dict() for financial in financials],
         predictions=[PredictionCreateSchema(**prediction).dict() for prediction in predictions],
-        calendars=parsed_appcalendar_result,
+        calendars=[CalendarCreateSchema(**calendar) for calendar in parsed_appcalendar_result],
     )
     return result
+
 
 async def get_companies(company_codes):
     for k in company_codes:
@@ -124,37 +134,25 @@ async def main():
             result = await start_scrape(categories, code)
 
             count += 1
-            ci_name = result["general"]["ci_name"]
-            ci_code = result["general"]["ci_code"]
+            ci_name = result["general"].ci_name
+            ci_code = result["general"].ci_code
             logger.info(f"총 처리 수: {count}")
             logger.info(f"기업이름: {ci_name}, 기업코드: {ci_code}")
-            # ci_demand_forecast_date = result['general']['ci_demand_forecast_date']
-            # ci_public_subscription_date = result['general']['ci_public_subscription_date']
-            # ci_refund_date = result['general']['ci_refund_date']
-            # ci_payment_date = result['general']['ci_payment_date']
-            # ci_listing_date = result['general']['ci_listing_date']
-            # print(f"기업이름: {ci_name}, 기업코드: {ci_code}")
-            # print(f'수요예측일정:{ci_demand_forecast_date},공모청약일정:{ci_public_subscription_date},환불일:{ci_refund_date},납입일:{ci_payment_date},상장일:{ci_listing_date}')
-            # logger.info(f'기업이름: {ci_name}, 수요예측일정:{ci_demand_forecast_date},공모청약일정:{ci_public_subscription_date},환불일:{ci_refund_date},납입일:{ci_payment_date},상장일:{ci_listing_date}')
             async with async_session() as session:
                 async with session.begin():
                     company = Company(session)
-                    success = await company.create(
+                    await company.upsert(
                         general=result["general"],
                         shareholders=result["shareholders"],
                         predictions=result["predictions"],
                         subscribers=result["subscribers"],
                         financials=result["financials"],
-                        calendars=result['calendars']
+                        calendars=result["calendars"],
                     )
-            success = None
-            if success:
-                logger.info("종목 데이터를 디비에 등록 하는 것을 성공 하였습니다")
-            else:
-                logger.warning("종목 데이터를 디비에 등록 하는 것을 실패했습니다")
     finally:
-        logger.info('DB와의 연결을 종료합니다')
+        logger.info("DB와의 연결을 종료합니다")
         await engine.dispose()
-        logger.info('메인 프로세스를 종료합니다.')
+        logger.info("메인 프로세스를 종료합니다.")
+
 
 asyncio.run(main())
