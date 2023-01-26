@@ -7,13 +7,13 @@ from enum import Enum
 from pydantic import BaseModel, validator, Field
 
 from utilities import converters
-from ipo.schemas.company_info_financial import CompanyInfoFinancialSchema
-from ipo.schemas.company_info_prediction import CompanyInfoPredictionSchema
-from ipo.schemas.company_info_shareholder import CompanyInfoShareholderSchema
-from ipo.schemas.company_info_prediction import CompanyInfoPredictionSchema
-from ipo.schemas.company_info_subscriber import CompanyInfoSubscriberSchema
-from ipo.schemas.app_calendar import AppCalendarSchema
-
+#from schemas.financial import CompanyInfoFinancialSchema
+#from schemas.prediction import CompanyInfoPredictionSchema
+#from schemas.shareholder import CompanyInfoShareholderSchema
+#from schemas.prediction import CompanyInfoPredictionSchema
+#from schemas.subscriber import CompanyInfoSubscriberSchema
+#from schemas.calendar import AppCalendarSchema
+#
 
 class State(Enum):
     MODIFY = "modify"
@@ -359,14 +359,14 @@ class GeneralCreateSchema(GeneralBase):
         return ""
 
 
-class GeneralSchema(GeneralBase):
-    ci_idx: int
-    shareholders: List[CompanyInfoShareholderSchema]
-    predictions = List[CompanyInfoPredictionSchema]
-    subscribers = List[CompanyInfoSubscriberSchema]
-    financials = List[CompanyInfoFinancialSchema]
-    app_calendars = List[AppCalendarSchema]
-
-    class Config:
-        orm_mode = True
-        arbitrary_types_allowed = True
+#class GeneralSchema(GeneralBase):
+#    ci_idx: int
+#    shareholders: List[CompanyInfoShareholderSchema]
+#    predictions = List[CompanyInfoPredictionSchema]
+#    subscribers = List[CompanyInfoSubscriberSchema]
+#    financials = List[CompanyInfoFinancialSchema]
+#    app_calendars = List[AppCalendarSchema]
+#
+#    class Config:
+#        orm_mode = True
+#        arbitrary_types_allowed = True

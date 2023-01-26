@@ -2,7 +2,7 @@ import re
 from datetime import datetime
 
 from pydantic import BaseModel, validator, Field
-from ipo.utilities import converters
+from utilities import converters
 
 
 class FinancialBaseSchema(BaseModel):
