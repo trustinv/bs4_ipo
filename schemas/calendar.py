@@ -10,7 +10,7 @@ class CalendarBaseSchema(BaseModel):
     ac_category_name: str = ""
     ac_category: int = 0
     ac_company_name: str = ""
-    ac_vitalize: str = 1
+    ac_vitalize: str = "Y"
     ac_datetime: datetime = datetime.now()
 
 

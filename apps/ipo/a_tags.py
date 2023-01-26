@@ -9,8 +9,10 @@ from config.config_log import logging
 
 logger = logging.getLogger("info-logger")
 
+from async_retrying import retry
 
 
+@retry(attempts=100)
 async def scrape_categories(url: str, code: str = None) -> List[int]:
     """
     Scrapes data from the webpage for the given stock code and returns a list of integers representing the available category numbers for the company.
@@ -32,7 +34,7 @@ async def scrape_categories(url: str, code: str = None) -> List[int]:
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         logger.error("Request failed, retrying in 5 seconds...")
         logger.error(e)
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(1)
 
     category_path = [a.get("href") for a in soup.find_all("a", href=re.compile("view_0[1-5]"))]
     if category_path:

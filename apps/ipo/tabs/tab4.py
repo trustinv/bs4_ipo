@@ -4,11 +4,14 @@ import aiohttp
 import re
 
 from bs4 import BeautifulSoup
-from retry import retry
+from async_retrying import retry
+
 from apps.ipo.agents import get_user_agents
+
 
 async def cancelled_ipo(value: Optional[str]) -> Optional[str]:
     pass
+
 
 async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, str]:
     """
@@ -126,7 +129,7 @@ async def extract_data_from_table4(table: BeautifulSoup) -> List[Dict[str, str]]
     return result
 
 
-@retry(tries=3, delay=5)
+@retry(attempts=100)
 async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str], List[Dict[str, str]]]]:
     """
     Scrapes financial data for a given company code from the website ipostock.co.kr.
@@ -148,10 +151,9 @@ async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str], Lis
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         print("Request failed, retrying in 5 seconds...")
         print(e)
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(1)
 
     table1, table2, table3, table4, *_ = soup.select("table.view_tb")
-    
 
     t1, t2, t3, t4 = await asyncio.gather(
         extract_data_from_table1(table1),
@@ -160,7 +162,7 @@ async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str], Lis
         extract_data_from_table4(table4),
     )
 
-    cancelled_ipo_css_selector = '#print > table > tr:nth-child(3) > td > table > tr > td:nth-child(1) > table > tr:nth-child(1) > td > table > tr > td:nth-child(2) > font > b'
+    cancelled_ipo_css_selector = "#print > table > tr:nth-child(3) > td > table > tr > td:nth-child(1) > table > tr:nth-child(1) > td > table > tr > td:nth-child(2) > font > b"
     cancelled_ipo = soup.select_one(cancelled_ipo_css_selector)
     if not cancelled_ipo:
         is_cancelled = None
@@ -181,6 +183,7 @@ if __name__ == "__main__":
         code = "B202010131"
         general_result, subscriber_results = await scrape_ipostock(code)
         from pprint import pprint as pp
+
         print(general_result)
         # pp(subscriber_results)
         from schemas.general import GeneralCreateSchema

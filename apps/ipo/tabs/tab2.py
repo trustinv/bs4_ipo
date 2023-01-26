@@ -8,9 +8,10 @@ from config.config_log import logging
 
 logger = logging.getLogger("info-logger")
 
+
 async def get_capital_n_stcks(table: BeautifulSoup) -> Tuple[str, str]:
     """
-    Given a BeautifulSoup object of an html table, this function extracts the capital and stocks information 
+    Given a BeautifulSoup object of an html table, this function extracts the capital and stocks information
     and returns it as a tuple in the format (capital, stocks)
     """
     try:
@@ -27,6 +28,7 @@ async def get_capital_n_stcks(table: BeautifulSoup) -> Tuple[str, str]:
     except AttributeError as err:
         logger.error(err)
 
+
 async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, str]:
     """
     Given a BeautifulSoup object of an html table, this function extracts the data from table1 and returns it in a dictionary.
@@ -34,12 +36,14 @@ async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, str]:
     capital, stocks = await get_capital_n_stcks(table)
     return dict(ci_before_po_capital=capital, ci_before_po_stocks=stocks)
 
+
 async def extract_data_from_table2(table: BeautifulSoup) -> Dict[str, str]:
     """
     Given a BeautifulSoup object of an html table, this function extracts the data from table2 and returns it in a dictionary.
     """
     capital, stocks = await get_capital_n_stcks(table)
     return dict(ci_after_po_capital=capital, ci_after_po_stocks=stocks)
+
 
 async def convert_ci_current_ratio(value: str) -> int:
     """
@@ -54,7 +58,10 @@ async def convert_ci_current_ratio(value: str) -> int:
     except AttributeError as err:
         logger.error(err)
 
-async def extract_data_from_table3(table: BeautifulSoup) -> Tuple[List[Dict[str, str]], Dict[str, int]]:
+
+async def extract_data_from_table3(
+    table: BeautifulSoup,
+) -> Tuple[List[Dict[str, str]], Dict[str, int]]:
     """
     Given a BeautifulSoup object of an html table, this function extracts the data from table3 and returns it in a tuple in the format (data, ci_current_ratio)
     """
@@ -102,6 +109,10 @@ async def extract_data_from_table3(table: BeautifulSoup) -> Tuple[List[Dict[str,
         logger.error(err)
 
 
+from async_retrying import retry
+
+
+@retry(attempts=100)
 async def scrape_ipostock(code: str) -> Tuple[List[Dict[str, str]], Dict[str, str], Dict[str, int]]:
     """
     Given a stock code, this function scrapes information from a website and returns it as a tuple in the format (data1, data2, data3)
@@ -115,7 +126,7 @@ async def scrape_ipostock(code: str) -> Tuple[List[Dict[str, str]], Dict[str, st
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         logger.error("Request failed, retrying in 5 seconds...")
         logger.error(e)
-        await asyncio.sleep(0.3)
+        await asyncio.sleep(1)
 
     table1, table2, table3 = soup.find_all("table", class_="view_tb")[:3]
 

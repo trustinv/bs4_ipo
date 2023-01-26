@@ -23,9 +23,20 @@ def change_currency(value):
             if result in string.whitespace:
                 return 0.0
             else:
-                print('오류 발생')
+                print("오류 발생")
                 pass
-                
+
+
+def cleaning_ci_homepage(value):
+    match = re.search(r"(?<=://)[^/]*", value)
+    if match:
+        return match.group(0)
+    else:
+        match = re.search(r"[/]*([^/]+)[/]*", value)
+        if match:
+            return match.group(1)
+        else:
+            return ""
 
 
 def remove_whitespace(value):
@@ -78,7 +89,7 @@ def dollar_to_float(value):
 
 def dot_dash_to_slash(value):
     if isinstance(value, str):
-        if value == '공모철회':
+        if value == "공모철회":
             return value
         value = re.sub(r"[.-]", "/", value)
         return value

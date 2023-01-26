@@ -224,7 +224,9 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_homepage")
     def convert_ci_homepage(cls, value):
-        return converters.none_to_empty_string(value)
+        value = converters.none_to_empty_string(value)
+        value = converters.cleaning_ci_homepage(value)
+        return value
 
     @validator("ci_big_ir_plan", pre=True)
     def convert_ci_big_ir_plan(cls, value):

@@ -46,6 +46,10 @@ async def get_years(year):
         yield k
 
 
+from async_retrying import retry
+
+
+@retry(attempts=100)
 async def scrape_company_codes(year=2021):
     ipo_companies = []
     delisted_companies = []
@@ -69,7 +73,7 @@ async def scrape_company_codes(year=2021):
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
                 print("Request failed, retrying in 5 seconds...")
                 print(e)
-                await asyncio.sleep(0.3)
+                await asyncio.sleep(1)
 
             page_data = soup.select_one('td[colspan="9"]')
             if page_data is not None:
