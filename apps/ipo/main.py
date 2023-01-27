@@ -18,7 +18,6 @@ from schemas.calendar import CalendarCreateSchema
 from utilities.time_measure import timeit
 from config.config_log import logging
 
-logger = logging.getLogger('info-logger"')
 logger = logging.getLogger("info-logger")
 
 
@@ -29,7 +28,11 @@ async def parse_appcalendar_data(**kwargs):
         ci_refund_date=(3, "환불일"),
         ci_payment_date=(4, "납입일"),
     )
-    ci_public_subscription_date = False if kwargs.get('ci_public_subscription_date') == '공모철회' else kwargs.get('ci_public_subscription_date')
+    ci_public_subscription_date = (
+        False
+        if kwargs.get("ci_public_subscription_date") == "공모철회"
+        else kwargs.get("ci_public_subscription_date")
+    )
     ac_company_name = kwargs.pop("ci_name")
 
     result = []
@@ -46,16 +49,16 @@ async def parse_appcalendar_data(**kwargs):
 
             if not ci_public_subscription_date:
                 result.append(
-                dict(
-                    ac_sdate='공모철회',
-                    ac_edate='공모철회',
-                    ac_category=ac_category,
-                    ac_category_name=ac_category_name,
-                    ac_company_name=ac_company_name,
-                    ac_vitalize=1,
-                    ac_datetime=datetime.datetime.now(),
+                    dict(
+                        ac_sdate="공모철회",
+                        ac_edate="공모철회",
+                        ac_category=ac_category,
+                        ac_category_name=ac_category_name,
+                        ac_company_name=ac_company_name,
+                        ac_vitalize=1,
+                        ac_datetime=datetime.datetime.now(),
+                    )
                 )
-            )
             else:
                 result.append(
                     dict(
@@ -110,9 +113,7 @@ async def start_scrape(categories, code):
 
     result = dict(
         general=general,
-        shareholders=[
-            ShareholderCreateSchema(**shareholder) for shareholder in shareholders
-        ],
+        shareholders=[ShareholderCreateSchema(**shareholder) for shareholder in shareholders],
         subscribers=[SubscriberCreateSchema(**subscriber) for subscriber in subscribers],
         financials=[FinancialCreateSchema(**financial) for financial in financials],
         predictions=[PredictionCreateSchema(**prediction) for prediction in predictions],
