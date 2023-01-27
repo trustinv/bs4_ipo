@@ -6,5 +6,6 @@ set -o nounset
 
 WORKDIR="/ipo_crawler"
 
-# python $WORKDIR/apps/ipo/main.py
-python apps/ipo/main.py
+echo '크롤링을 시작합니다'
+python $WORKDIR/apps/ipo/main.py
+/bin/bash

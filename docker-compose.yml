@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
     hostname: ipo_crawler
-    command: /start.sh
+    command: ./start.sh
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ipo_volume:/ipo_crawler
