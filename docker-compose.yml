@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  crawler:
+    image: python:3.10-slim
+    container_name: ipo_cralwer
+    build:
+      context: .
+      dockerfile: Dockerfile
+    hostname: ipo_crawler
+    command: /start.sh
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ipo_volume:/ipo_crawler
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - host.docker.internal:host-gateway
+
+volumes:
+  ipo_volume:

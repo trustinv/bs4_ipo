@@ -9,6 +9,7 @@ class GlobalSettings(BaseSettings):
     ENV_STATE: str = "dev"
     APP_ENV: str = "dev"
     CONFIG_PATH: str = str(config_path)
+    PROJECT_PATH: str = str(config_path.parent)
 
     class Config:
         env_file = f"{config_path}/envs/.env"
@@ -53,6 +54,7 @@ settings = FactorySettings.load()
 
 IPO_URL = settings.IPO_URL
 CONFIG_PATH = settings.CONFIG_PATH
+PROJECT_PATH = settings.CONFIG_PATH
 LISTING_SERVER_IP = settings.LISTING_SERVER_IP
 WEB_SERVER_IP = settings.WEB_SERVER_IP
 

@@ -1,6 +1,6 @@
 import os
 import logging.config
-from config.settings import SLACK_WEB_HOOK_URL, CONFIG_PATH
+from config.settings import SLACK_WEB_HOOK_URL, PROJECT_PATH
 
 
 # Logging
@@ -11,7 +11,7 @@ def log_path(project_path, log_dirname="logs"):
 
 
 # log_dir_path
-log_path = log_path(CONFIG_PATH)
+log_path = log_path(PROJECT_PATH)
 
 formatter_form = {
     "format": "%(levelname)s | %(asctime)s | %(module)s | %(lineno)d | %(message)s",
