@@ -32,7 +32,7 @@ class ShareholderCreateSchema(ShareholderBase):
 
     @validator("ci_first_stocks", pre=True)
     def convert_ci_first_stocks(cls, value):
-        value = converters.only_digits(value)
+        value = converters.only_digits_to_int(value)
         return value
 
     @validator("ci_share_rate", pre=True)
