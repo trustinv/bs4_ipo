@@ -78,6 +78,18 @@ async def extract_data_from_table3(table: BeautifulSoup) -> Dict[str, str]:
     Returns:
     - Dict[str, str]: A dictionary containing the extracted data.
     """
+    ci_public_offering_stocks, *rest_trs = table.select("tr")
+    instance = ci_public_offering_stocks.select_one("td:nth-child(2) > b")
+    data = None
+    ci_public_offering_stocks = 0
+    if instance is None:
+        pass
+    else:
+        data = instance.get_text().split("주")[0]
+        if data == "":
+            pass
+        ci_public_offering_stocks = f"{data}주"
+
     keys = [
         "ci_professional_investor_stock",
         "ci_professional_investor_rate",
@@ -89,13 +101,13 @@ async def extract_data_from_table3(table: BeautifulSoup) -> Dict[str, str]:
         "ci_overseas_investor_rate",
     ]
     result = []
-    trs = table.select("tr")[1:]
-    for tr in trs:
+    for tr in rest_trs:
         tds = tr.select("td")
         for td in tds:
             if re.search(r"\d+[,\d+]*", td.text):
                 result.append(td.text)
     result = {key: value for key, value in zip(keys, result)}
+    result.update(dict(ci_public_offering_stocks=ci_public_offering_stocks))
     return result
 
 
@@ -147,7 +159,6 @@ async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str], Lis
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=header) as resp:
                 soup = BeautifulSoup(await resp.text(), "lxml")
-            soup = BeautifulSoup(await resp.text(), "lxml")
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         print("Request failed, retrying in 5 seconds...")
         print(e)
