@@ -54,7 +54,7 @@ settings = FactorySettings.load()
 
 IPO_URL = settings.IPO_URL
 CONFIG_PATH = settings.CONFIG_PATH
-PROJECT_PATH = settings.CONFIG_PATH
+PROJECT_PATH = settings.PROJECT_PATH
 LISTING_SERVER_IP = settings.LISTING_SERVER_IP
 WEB_SERVER_IP = settings.WEB_SERVER_IP
 
@@ -90,3 +90,5 @@ if __name__ == "__main__":
     print(settings.REALTIME_PRICE_PAST_API)
     print(settings.REALTIME_PRICE_API)
     print(settings.REALTIME_PRICE_API)
+    print(settings.PROJECT_PATH)
+

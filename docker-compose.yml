@@ -9,12 +9,5 @@ services:
     hostname: ipo_crawler
     command: ./start.sh
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ipo_volume:/ipo_crawler
-      - /var/run/docker.sock:/var/run/docker.sock
+      - .:/ipo_crawler
     network_mode: host
-    #extra_hosts:
-    #  - host.docker.internal:host-gateway
-
-volumes:
-  ipo_volume:
