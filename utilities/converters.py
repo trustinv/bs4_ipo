@@ -118,7 +118,7 @@ def string_rate_to_percentage(value):
             return 0.0
         value = match.group()
         value = float(value)
-        return value / 100
+        return value
 
 
 def string_rate_to_float(value):
@@ -171,7 +171,10 @@ def empty_string_to_float(value):
 
 def string_percentage_to_float(value):
     if isinstance(value, str):
-        result = float(re.search(r"\d+\.\d+", value).group())
+        data = re.search(r"\d+\.\d+", value)
+        if data is None:
+            return 0.0
+        result = float(data.group())
         return result
     return value
 

@@ -84,7 +84,7 @@ async def extract_data_from_table3(
         for raw in tds[1:]:
             raw_text = raw.text.replace(" ", "").strip()
             if not raw_text:
-                break
+                continue
             # break
             if flag == 1:
                 if "유통가능" in raw_text:
@@ -99,6 +99,7 @@ async def extract_data_from_table3(
 
         temp3 = await nesten_list(categories1)
         temp4 = await nesten_list(categories2)
+        print(temp4)
         for raw in temp3:
             raw.insert(0, 1)
         for raw in temp4:
