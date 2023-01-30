@@ -3,6 +3,7 @@ from typing import Dict, Union
 import asyncio
 import aiohttp
 from bs4 import BeautifulSoup
+from async_retrying import retry
 from apps.ipo.agents import get_user_agents
 from config.config_log import logging
 
@@ -93,20 +94,18 @@ async def extract_data_from_table3(table: BeautifulSoup) -> Dict[str, str]:
         "ci_largest_shareholder",
         "ci_largest_shareholder_rate",
         "ci_po_expected_price",
-        "ci_public_offering_stocks",
+        "ci_po_expected_stocks",
         "ci_po_expected_amount",
         "ci_listing_expected_stocks",
     ]
     try:
         tds = table.select('tr > td[width="240"]')
-        result = [td.text if td.text is not None else "" for td in tds]
+        result = [td.string.strip() if td.string is not None else "" for td in tds]
         result = dict(zip(keys, result))
+        print(result)
         return result
     except AttributeError as err:
         logger.error(err)
-
-
-from async_retrying import retry
 
 
 @retry(attempts=100)

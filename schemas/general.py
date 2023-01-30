@@ -361,6 +361,10 @@ class GeneralCreateSchema(GeneralBase):
     def convert_ci_po_expected_price(cls, value):
         return ""
 
+    @validator("ci_po_expected_stocks", pre=True)
+    def convert_ci_po_expected_stocks(cls, value):
+        return converters.only_digits_to_int(value)
+
 
 # class GeneralSchema(GeneralBase):
 #    ci_idx: int
