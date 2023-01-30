@@ -71,8 +71,8 @@ async def scrape_company_codes(year=2021):
                         soup = BeautifulSoup(await resp.text(), "lxml")
 
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
-                print("Request failed, retrying in 5 seconds...")
-                print(e)
+                logger.error("Request failed, retrying in 5 seconds...")
+                logger.error(e)
                 await asyncio.sleep(1)
 
             page_data = soup.select_one('td[colspan="9"]')

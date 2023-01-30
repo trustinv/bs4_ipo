@@ -82,7 +82,7 @@ async def extract_data_from_table3(
         categories1 = []
         categories2 = []
         for raw in tds[1:]:
-            raw_text = raw.text.replace(" ", "").strip()
+            raw_text = raw.text
             if not raw_text:
                 continue
             # break
@@ -99,7 +99,6 @@ async def extract_data_from_table3(
 
         temp3 = await nesten_list(categories1)
         temp4 = await nesten_list(categories2)
-        print(temp4)
         for raw in temp3:
             raw.insert(0, 1)
         for raw in temp4:
@@ -146,6 +145,9 @@ if __name__ == "__main__":
         #        code = "B202111241"
         code = "B202109161"
         code = "B202207081"
+
+        code = "B202108121"  # 바이옵트로
+        code = "B201803291"  # 트윔
         general_result, shareholder_results = await scrape_ipostock(code)
         from schemas.general import GeneralCreateSchema
         from schemas.shareholder import ShareholderCreateSchema

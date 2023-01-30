@@ -102,7 +102,7 @@ async def start_scrape(categories, code):
                 general_result.update(general_result5)
 
     general = GeneralCreateSchema(**general_result)
-
+    logger.info(f"기업명: {general.ci_name}")
     parsed_appcalendar_result = await parse_appcalendar_data(
         ci_demand_forecast_date=general.ci_demand_forecast_date,
         ci_public_subscription_date=general.ci_public_subscription_date,
@@ -140,10 +140,9 @@ async def main():
             result = await start_scrape(categories, code)
 
             count += 1
-            ci_name = result["general"].ci_name
-            ci_code = result["general"].ci_code
+            # ci_name = result["general"].ci_name
+            # ci_code = result["general"].ci_code
             logger.info(f"총 처리 수: {count}")
-            logger.info(f"기업이름: {ci_name}, 기업코드: {ci_code}")
             async with async_session() as session:
                 async with session.begin():
                     company = Company(session)
