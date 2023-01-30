@@ -147,7 +147,8 @@ class GeneralCreateSchema(GeneralBase):
     @validator("ci_list_type", pre=True)
     def validate_ci_list_type(cls, value):
         value = converters.extensions_to_string(value)
-        return converters.ci_list_type(value)
+        value = converters.ci_list_type(value)
+        return value
 
     @validator("ci_review_c_date", pre=True)
     def convert_ci_review_c_date(cls, value):
@@ -351,6 +352,7 @@ class GeneralCreateSchema(GeneralBase):
     @validator("ci_demand_forecast_date", pre=True)
     def convert_ci_demand_forecast_date(cls, value):
         result = converters.dot_dash_to_slash(value)
+        result.split("~")
         return result
 
     @validator("ci_competition_rate", pre=True)

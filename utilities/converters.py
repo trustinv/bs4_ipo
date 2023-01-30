@@ -52,11 +52,17 @@ def none_to_empty_string(value):
 def extensions_to_string(value):
     ci_market_separation = value.split("/")[-1].split(".")[0]
     market_separation = {"co": "코스닥", "u": "유가증권", "f": "코넥스", "b": "비상장", "k": "K-OTC"}
-    return market_separation.get(ci_market_separation, "")
+    value = market_separation.get(ci_market_separation, "")
+    return value
 
 
 def ci_list_type(value):
-    ci_list_type = "신규상장" if extensions_to_string(value) in ("코스닥", "유가증권") else "이전상장"
+    if value in ("코스닥", "유가증권"):
+        ci_list_type = "신규상장"
+    else:
+        ci_list_type = "이전상장"
+    # ci_list_type = "신규상장" if extensions_to_string(value) in ("코스닥", "유가증권") else "이전상장"
+
     return ci_list_type
 
 
