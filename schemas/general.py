@@ -7,13 +7,15 @@ from enum import Enum
 from pydantic import BaseModel, validator, Field
 
 from utilities import converters
-#from schemas.financial import CompanyInfoFinancialSchema
-#from schemas.prediction import CompanyInfoPredictionSchema
-#from schemas.shareholder import CompanyInfoShareholderSchema
-#from schemas.prediction import CompanyInfoPredictionSchema
-#from schemas.subscriber import CompanyInfoSubscriberSchema
-#from schemas.calendar import AppCalendarSchema
+
+# from schemas.financial import CompanyInfoFinancialSchema
+# from schemas.prediction import CompanyInfoPredictionSchema
+# from schemas.shareholder import CompanyInfoShareholderSchema
+# from schemas.prediction import CompanyInfoPredictionSchema
+# from schemas.subscriber import CompanyInfoSubscriberSchema
+# from schemas.calendar import AppCalendarSchema
 #
+
 
 class State(Enum):
     MODIFY = "modify"
@@ -33,7 +35,7 @@ class GeneralBase(BaseModel):
     ci_keyword2: str = ""
     ci_keyword3: str = ""
     ci_keyword4: str = ""
-    ci_list_type: str = ci_market_separation
+    ci_list_type: str = ""
     ci_review_c_date: str = ""
     ci_review_a_date: str = ""
     ci_face_value: int = 0
@@ -144,6 +146,7 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_list_type", pre=True)
     def validate_ci_list_type(cls, value):
+        value = converters.extensions_to_string(value)
         return converters.ci_list_type(value)
 
     @validator("ci_review_c_date", pre=True)
@@ -359,7 +362,7 @@ class GeneralCreateSchema(GeneralBase):
         return ""
 
 
-#class GeneralSchema(GeneralBase):
+# class GeneralSchema(GeneralBase):
 #    ci_idx: int
 #    shareholders: List[CompanyInfoShareholderSchema]
 #    predictions = List[CompanyInfoPredictionSchema]

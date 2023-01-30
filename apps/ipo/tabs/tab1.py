@@ -33,7 +33,12 @@ async def extract_data_from_table1(table: BeautifulSoup) -> Dict[str, Union[str,
         data2 = table.select_one(".view_tit").get_text()
         data3 = table.select_one(".view_txt01").get_text()
         data1 = table.select_one("img")["src"]
-        return {"ci_market_separation": data1, "ci_name": data2, "ci_code": data3}
+        return {
+            "ci_market_separation": data1,
+            "ci_list_type": data1,
+            "ci_name": data2,
+            "ci_code": data3,
+        }
     except KeyError as err:
         logger.error(err)
     except AttributeError as err:
