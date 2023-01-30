@@ -21,31 +21,16 @@ async def extract_data_from_table1(table: BeautifulSoup) -> List[Dict[str, str]]
     - List[Dict[str, str]]: A list of dictionaries containing the extracted data.
     """
 
-    try:
-        keys = [
-            "ci_price",
-            "ci_incidence",
-            "ci_incidence_specific_gravity",
-            "ci_participation",
-            "ci_participation_specific_gravity",
-        ]
-        results = []
-        trs = table.select("tr")[2:-1]
-        for tr in trs:
-            tds = tr.select("td")
-            empty_string = tds[0].text.strip().replace(" ", "")
-            if not empty_string:
-                break
-            temp = []
-            for td in tds:
-                temp.append(td.text)
-            results.append(temp)
-
-        result = [dict(zip(keys, result)) for result in results]
-
-        return result
-    except AttributeError as err:
-        logger.error(err)
+    keys = [
+        "ci_price",
+        "ci_incidence",
+        "ci_incidence_specific_gravity",
+        "ci_participation",
+        "ci_participation_specific_gravity",
+    ]
+    results = []
+    trs = table.select("tr")
+    if trs is None:
         result = [
             {
                 "ci_price": "",
@@ -56,6 +41,33 @@ async def extract_data_from_table1(table: BeautifulSoup) -> List[Dict[str, str]]
             }
         ]
         return result
+    else:
+        try:
+            for tr in trs[2:-1]:
+                tds = tr.select("td")
+                empty_string = tds[0].text.strip().replace(" ", "")
+                if not empty_string:
+                    break
+                temp = []
+                for td in tds:
+                    temp.append(td.text)
+                results.append(temp)
+
+            result = [dict(zip(keys, result)) for result in results]
+
+            return result
+        except AttributeError as err:
+            logger.error(err)
+            result = [
+                {
+                    "ci_price": "",
+                    "ci_incidence": 0,
+                    "ci_incidence_specific_gravity": 0.0,
+                    "ci_participation": 0,
+                    "ci_participation_specific_gravity": 0.0,
+                }
+            ]
+            return result
 
 
 async def extract_data_from_table2(table: BeautifulSoup) -> Dict[str, Union[str, float]]:
