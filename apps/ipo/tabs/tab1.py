@@ -102,7 +102,6 @@ async def extract_data_from_table3(table: BeautifulSoup) -> Dict[str, str]:
         tds = table.select('tr > td[width="240"]')
         result = [td.string.strip() if td.string is not None else "" for td in tds]
         result = dict(zip(keys, result))
-        print(result)
         return result
     except AttributeError as err:
         logger.error(err)
