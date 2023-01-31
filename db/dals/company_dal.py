@@ -1,6 +1,6 @@
 import asyncio
 from typing import List, Optional
-from sqlalchemy import select
+from sqlalchemy import select, func
 from config.settings import settings
 
 from utilities.time_measure import timeit
@@ -61,9 +61,17 @@ class Company:
     #             General.ci_listing_date >=
     #             ))
     #     )
+    async def get_one(self) -> General:
+        q = await self._db_session.execute(select(General).limit(1))
+        return q.first()
+    
+    async def get_count(self) -> General:
+        count = await self._db_session.scalar(select(func.count(General.ci_idx)))
+        return count
+        # return True if q.first() else False
 
     async def get_all_companies(self) -> List[General]:
-        q = await self._db_session.execute(select(General).order_by(General.id))
+        q = await self._db_session.execute(select(General).order_by(General.ci_demand_forecast_date))
         return q.scalars().all()
 
     async def get_all_delisted_companies_name(self) -> List[str]:
@@ -191,10 +199,10 @@ if __name__ == "__main__":
             #     r = await company_dal.delist(r.ci_name)
             #     print(r)
             async with session.begin():
-                r: General = await company_dal.read("1919800")
-                print(
-                    r,
-                )
+                rs: General = await company_dal.get_one()
+                # print([r.ci_name for r in rs])
+                print(rs)
+                
             # r = await company_dal.get_all_delisted_companies_name()
             # print(r, len(r))
         await engine.dispose()

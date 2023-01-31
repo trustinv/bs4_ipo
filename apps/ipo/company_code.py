@@ -1,5 +1,6 @@
 import aiohttp
 import asyncio
+from datetime import datetime, timedelta
 
 import re
 from datetime import datetime
@@ -14,6 +15,39 @@ from config.config_log import logging
 
 logger = logging.getLogger("info-logger")
 
+
+async def is_initialze(session) -> bool:
+    instance = Company(session)
+    if await instance.get_one() is None:
+        # DB가 텅텅 비었음
+        return True
+    # 이미 데이터가 있음.
+    return False
+
+async def get_code(a_tag):
+    try:
+        href = a_tag["href"]
+        company_code = re.search("code=(.+)&", href).group(1)
+        return company_code
+    except KeyError as err:
+        logger.error(err)
+    except AttributeError as err:
+        logger.error(err)
+
+
+async def is_listing_date(this_year, listing_date):
+    return datetime.strptime(f"{this_year}.{listing_date.string.strip()}", '%Y.%m.%d')+timedelta(days=1) > datetime.now()
+
+async def belong_to_update(demand_forecast_date, listing_date, this_year, ci_code, ipo_companies):
+    if demand_forecast_date !='공모철회' and listing_date.string is None:
+        ipo_companies.append(ci_code)
+    elif demand_forecast_date !='공모철회' and await is_listing_date(this_year, listing_date):
+        ipo_companies.append(ci_code)
+    elif demand_forecast_date =='공모철회' and listing_date.string is None:
+        ipo_companies.append(ci_code)
+    elif demand_forecast_date =='공모철회' and await is_listing_date(this_year, listing_date):
+        ipo_companies.append(ci_code)
+    return 
 
 async def delist(session, company_name):
 
@@ -54,6 +88,8 @@ async def scrape_company_codes(year=2021):
     ipo_companies = []
     delisted_companies = []
     header = await get_user_agents()
+    update_companies = []
+    this_year = str(datetime.now().year)
     async for year in get_years(year):
         logger.debug("연도", year)
         page_data = None
@@ -64,6 +100,12 @@ async def scrape_company_codes(year=2021):
             url = f"http://www.ipostock.co.kr/sub03/ipo02.asp?str4={year}&str5=all&page={page}"
             logger.debug(f"page: {page}, url: {url}")
             page += 1
+
+            # DB에 데이터가 1개라도 있으면 당해년도로
+            # DB에 데이터가 없으면 2021년도부터 모두 가져옴
+            async with async_session() as session:
+                async with session.begin():
+                    is_initialized = await is_initialze(session)
 
             try:
                 async with aiohttp.ClientSession() as session:
@@ -82,61 +124,71 @@ async def scrape_company_codes(year=2021):
             table = soup.select_one(
                 "#print > table >  tr:nth-child(4) > td > table >  tr:nth-child(3) > td > table >  tr:nth-child(4) > td > table"
             )
+            
+            for idx, tr in enumerate(table, 0):
+                if isinstance(tr, bs4.element.Tag) and tr is not None:
+                    if not is_initialized :
+                        ci_name = tr.select_one("td:nth-child(3)") 
+                        listing_date = tr.select_one("td:nth-child(7)")
+                        
+                        if str(year) == this_year and ci_name is not None:
+                            demand_forecast_date = tr.select_one("td:nth-child(2)").get_text().strip()
+                            ci_name = tr.select_one("td:nth-child(3)").get_text().replace(' ', '').strip() 
+                            ci_code = tr.select_one("td:nth-child(3) a") 
+                            ci_code = await get_code(ci_code)
+                            listing_date = tr.select_one("td:nth-child(7)")
+                            await belong_to_update(demand_forecast_date, listing_date, this_year, ci_code, ipo_companies)
+                            
+                    else : 
+                        td = tr.find("td", {"width": "120"})
 
-            for idx, tr in enumerate(table, 1):
-                if isinstance(tr, bs4.element.Tag):
+                        # ci_demand_forecast_date = td.string.strip()
 
-                    # if idx == 7:
-                    #     name = tr.select_one("td:nth-child(7)")
-                    #     print(name)
-                    #     pass
-                    td = tr.find("td", {"width": "120"})
+                        if td is not None:
+                            td_name = tr.find("td", {"width": "*"})
+                            delisting = td.text.strip()
+                            company_code, company_name = await get_name_n_code(td_name)
 
-                    # ci_demand_forecast_date = td.string.strip()
+                            # DB에 데이터가 없는 경우
 
-                    if td is not None:
-                        td_name = tr.find("td", {"width": "*"})
-                        delisting = td.text.strip()
-                        company_code, company_name = await get_name_n_code(td_name)
+                            if delisting == "공모철회":
+                                # company = dict(
+                                #     delistted_company_name=company_name,
+                                #     delistted_company_code=company_code,
+                                # )
+                                # async with async_session() as session:
+                                # async with session.begin():
+                                # delist(session, company_name)
+                                # pass
+                                logger.info(f"공모철회 회사명 : {company_name}/ 코드:{company_code}")
+                                # delisted_companies.append(company)
+                                delisted_companies.append(company_code)
+                                # delisted_companies_in_page += 1
 
-                        # DB에 데이터가 없는 경우
+                            else:
+                                # company = dict(
+                                #     ipo_company_name=company_name, ipo_company_code=company_code
+                                # )
+                                # # print(company)
+                                # ipo_companies.append(company)
+                                ipo_companies.append(company_code)
+                                # ipo_companies_in_page += 1
 
-                        if delisting == "공모철회":
-                            company = dict(
-                                delistted_company_name=company_name,
-                                delistted_company_code=company_code,
-                            )
-                            # async with async_session() as session:
-                            # async with session.begin():
-                            # delist(session, company_name)
-                            # pass
-                            logger.info(f"공모철회 회사명 : {company_name}/ 코드:{company_code}")
-                            delisted_companies.append(company)
-                            delisted_companies_in_page += 1
-
-                        else:
-                            company = dict(
-                                ipo_company_name=company_name, ipo_company_code=company_code
-                            )
-                            # print(company)
-                            ipo_companies.append(company)
-                            ipo_companies_in_page += 1
-
-    ipo_companies_codes = [
-        value
-        for ipo_company in ipo_companies
-        for key, value in ipo_company.items()
-        if key == "ipo_company_code"
-    ]
-    delisted_companies_codes = [
-        value
-        for delisted_company in delisted_companies
-        for key, value in delisted_company.items()
-        if key == "delistted_company_code"
-    ]
-    all_companies_codes = ipo_companies_codes + delisted_companies_codes
-    logger.debug(f"모든 회사 코드: {all_companies_codes}")
-    return all_companies_codes
+    # ipo_companies_codes = [
+    #     value
+    #     for ipo_company in ipo_companies
+    #     for key, value in ipo_company.items()
+    #     if key == "ipo_company_code"
+    # ]
+    # delisted_companies_codes = [
+    #     value
+    #     for delisted_company in delisted_companies
+    #     for key, value in delisted_company.items()
+    #     if key == "delistted_company_code"
+    # ]
+    # all_companies_codes = ipo_companies_codes + delisted_companies_codes
+    # logger.debug(f"모든 회사 코드: {all_companies_codes}")
+    return ipo_companies + delisted_companies
 
 
 if __name__ == "__main__":

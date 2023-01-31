@@ -136,7 +136,7 @@ async def main():
         count = 0
         url = f"{IPO_URL}/view_pg"
         company_codes = await company_code.scrape_company_codes()
-        logger.info(f"수집을 시도 할 기업 수: {len(company_codes)}")
+        logger.info(f"스크래핑을 할 기업 수: {len(company_codes)}")
 
         async for code in get_companies(company_codes):
             categories = await a_tags.scrape_categories(url, code)
