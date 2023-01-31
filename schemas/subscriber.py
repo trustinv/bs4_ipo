@@ -17,10 +17,14 @@ class SubscriberBaseSchema(BaseModel):
 class SubscriberCreateSchema(SubscriberBaseSchema):
     @validator("ci_stock_firm", pre=True)
     def convert_ci_stock_firm(cls, value):
-        if "투자" in value:
+        if "미래" in value:
+            value = "미래"
+        elif "투자" in value:
             value = value.split("투자")[0]
         elif "증권" in value:
             value = value.split("증권")[0]
+        elif "금융" in value:
+            value = value.split("금융")[0]
         return value
 
     @validator("ci_assign_quantity", pre=True)

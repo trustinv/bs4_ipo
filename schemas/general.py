@@ -129,6 +129,11 @@ class GeneralBase(BaseModel):
 
 
 class GeneralCreateSchema(GeneralBase):
+    @validator("ci_code", pre=True)
+    def validate_ci_code(cls, value):
+        value = value.replace(" ", "").strip()
+        return value
+
     @validator("ci_face_value", pre=True)
     def validate_ci_face_value(cls, value):
         if isinstance(value, str):
@@ -346,14 +351,12 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_public_subscription_date", pre=True)
     def convert_ci_public_subscription_date(cls, value):
-        result = converters.dot_dash_to_slash(value)
+        result = converters.add_year_in_date_or_not(value)
         return result
 
     @validator("ci_demand_forecast_date", pre=True)
     def convert_ci_demand_forecast_date(cls, value):
-        result = converters.dot_dash_to_slash(value)
-        result.split("~")
-        return result
+        return converters.add_year_in_date_or_not(value)
 
     @validator("ci_competition_rate", pre=True)
     def convert_ci_competition_rate(cls, value):

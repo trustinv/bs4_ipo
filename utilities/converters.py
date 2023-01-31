@@ -40,7 +40,7 @@ def cleaning_ci_homepage(value):
 
 
 def remove_whitespace(value):
-    value = re.sub(r"\s", "", value).replace("[", "").replace("]", "")
+    value = re.sub(r"\s", "", value)
     return value
 
 
@@ -89,7 +89,7 @@ def dollar_to_float(value):
     if not value:
         return 0.0
     else:
-        value = int(value) / 10e1
+        value = (int(value) * 1200) / 10e1
     return value
 
 
@@ -97,9 +97,23 @@ def dot_dash_to_slash(value):
     if isinstance(value, str):
         if value == "공모철회":
             return value
+        value = value.replace(" ", "")
         value = re.sub(r"[.-]", "/", value)
         return value
     return ""
+
+
+def add_year_in_date_or_not(value):
+    value = dot_dash_to_slash(value)
+    if not value or value in string.whitespace:
+        return value
+    else:
+        head, tail = value.replace(" ", "").split("~")
+        year, _, _ = head.split("/")
+        if len(tail) < 10:
+            tail = f"{year}/{tail}"
+    result = f"{head}~{tail}"
+    return result
 
 
 def month_to_int(value):

@@ -10,12 +10,24 @@ from config.config_log import logging
 logger = logging.getLogger("info-logger")
 
 
-async def face_value(soup: BeautifulSoup) -> str:
+async def get_logo(table: BeautifulSoup) -> str:
+    if (img := table.select_one("td > a > img")) is not None:
+        pass
+    elif (img := table.select_one("td > img")) is not None:
+        pass
+    if img is None or img == "":
+        return ""
+    else:
+        ci_logo = img.get("src")
+        _, ci_logo_name = ci_logo.replace(" ", "").strip().split("corp/")
+        return ci_logo, ci_logo_name
+
+
+async def face_value(tds: BeautifulSoup) -> str:
     """
     Returns the face value of a stock from the given BeautifulSoup object
     """
     ci_face_value = None
-    tds = soup.select('table[width="390"] td')
     if not tds:
         logger.error("액면가를 가져 올수 없습니다. html tag를 확인하세요.")
     for idx, td in enumerate(tds):
@@ -118,21 +130,30 @@ async def scrape_ipostock(code: str) -> Dict[str, Union[str, Dict[str, str]]]:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=header) as resp:
                 soup = BeautifulSoup(await resp.text(), "lxml")
-
+        table_for_logo = soup.select_one('table[width="119"]')
+        table_for_face_value = soup.select('table[width="390"] td')
         table1 = soup.find("table", width="550", style="margin:0 auto;")
         table2, table3 = soup.select('table[width="780"][class="view_tb"]')
 
         if not table1 or not table2 or not table3:
             logger.error("html 태그 속성을 통해 데이터를 파싱 할 수 없습니다. ")
 
-        face_value_result, t1, t2, t3 = await asyncio.gather(
-            face_value(soup),
+        ci_logo_n_name, face_value_result, t1, t2, t3 = await asyncio.gather(
+            get_logo(table_for_logo),
+            face_value(table_for_face_value),
             extract_data_from_table1(table1),
             extract_data_from_table2(table2),
             extract_data_from_table3(table3),
         )
-
-        result = {"ci_face_value": face_value_result, **t1, **t2, **t3}
+        ci_logo, ci_logo_name = ci_logo_n_name
+        result = {
+            "ci_logo": ci_logo,
+            "ci_logo_name": ci_logo_name,
+            "ci_face_value": face_value_result,
+            **t1,
+            **t2,
+            **t3,
+        }
         return result
     except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         logger.error("Request failed, retrying in 5 seconds...")
@@ -144,6 +165,10 @@ if __name__ == "__main__":
 
     async def main():
         code = "B202111241"
+        # 제이오
+        code = "B202205041"
+        # 래몽래인
+        code = "B202010131"
         result = await scrape_ipostock(code)
 
         # print(result["ci_public_offering_stocks"])
@@ -155,7 +180,7 @@ if __name__ == "__main__":
 
         inst = g.dict()
         pp(inst)
-        # pp(inst["ci_face_value"])
+        pp(inst["ci_demand_forecast_date"])
         # pp(inst["ci_public_offering_stocks"])
 
     asyncio.run(main())

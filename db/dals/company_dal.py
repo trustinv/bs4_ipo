@@ -4,6 +4,7 @@ from sqlalchemy import select
 from config.settings import settings
 
 from utilities.time_measure import timeit
+from sqlalchemy import and_
 from sqlalchemy.orm import Session
 from db.models import (
     CompanyInfoShareholder as Shareholder,
@@ -52,6 +53,14 @@ class Company:
         self._db_session.add(new_company)
         await self._db_session.flush()
         return True
+
+    # async def get_companies_need_update(self) -> List[General]:
+    #     q = await self._db_session.execute(
+    #         select(General).where(and_(
+    #             General.ci_demand_forecast_date != "공모철회",
+    #             General.ci_listing_date >=
+    #             ))
+    #     )
 
     async def get_all_companies(self) -> List[General]:
         q = await self._db_session.execute(select(General).order_by(General.id))

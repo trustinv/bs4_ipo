@@ -23,7 +23,8 @@ class ShareholderCreateSchema(ShareholderBase):
 
     @validator("ci_category_name", pre=True)
     def convert_ci_category_name(cls, value):
-        return converters.remove_whitespace(value)
+        value = converters.remove_whitespace(value)
+        return value
 
     @validator("ci_normal_stocks", pre=True)
     def convert_ci_normal_stocks(cls, value):

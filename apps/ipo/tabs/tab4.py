@@ -192,6 +192,8 @@ if __name__ == "__main__":
         code = "B202010131"
 
         code = "B202010131"
+        # 삼기이브이
+        code = "B202206161"
         general_result, subscriber_results = await scrape_ipostock(code)
         from pprint import pprint as pp
 
