@@ -17,6 +17,7 @@ class SubscriberBaseSchema(BaseModel):
 class SubscriberCreateSchema(SubscriberBaseSchema):
     @validator("ci_stock_firm", pre=True)
     def convert_ci_stock_firm(cls, value):
+        value = value.replace('(주)', '')
         if "미래" in value:
             value = "미래"
         elif "투자" in value:

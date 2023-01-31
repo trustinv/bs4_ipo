@@ -136,7 +136,7 @@ async def scrape_company_codes(year=2021):
     ]
     all_companies_codes = ipo_companies_codes + delisted_companies_codes
     logger.debug(f"모든 회사 코드: {all_companies_codes}")
-    return delisted_companies_codes
+    return all_companies_codes
 
 
 if __name__ == "__main__":
