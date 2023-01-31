@@ -89,6 +89,18 @@ truncate table test_trustinv.company_info_shareholder ;
 
 truncate table test_trustinv.company_info_subscriber ;
 
+truncate table trustinv.app_calendar ;
+
+truncate table trustinv.company_info_general ;
+
+truncate table trustinv.company_info_financial ;
+
+truncate table trustinv.company_info_prediction ;
+
+truncate table trustinv.company_info_shareholder ;
+
+truncate table trustinv.company_info_subscriber ;
+
 select *
 from
     test_trustinv.company_info_general

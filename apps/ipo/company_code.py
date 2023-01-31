@@ -85,7 +85,14 @@ async def scrape_company_codes(year=2021):
 
             for idx, tr in enumerate(table, 1):
                 if isinstance(tr, bs4.element.Tag):
+
+                    # if idx == 7:
+                    #     name = tr.select_one("td:nth-child(7)")
+                    #     print(name)
+                    #     pass
                     td = tr.find("td", {"width": "120"})
+
+                    # ci_demand_forecast_date = td.string.strip()
 
                     if td is not None:
                         td_name = tr.find("td", {"width": "*"})
@@ -129,7 +136,7 @@ async def scrape_company_codes(year=2021):
     ]
     all_companies_codes = ipo_companies_codes + delisted_companies_codes
     logger.debug(f"모든 회사 코드: {all_companies_codes}")
-    return all_companies_codes
+    return delisted_companies_codes
 
 
 if __name__ == "__main__":

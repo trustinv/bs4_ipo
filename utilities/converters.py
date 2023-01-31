@@ -104,6 +104,8 @@ def dot_dash_to_slash(value):
 
 
 def add_year_in_date_or_not(value):
+    if value == "공모철회":
+        return value
     value = dot_dash_to_slash(value)
     if not value or value in string.whitespace:
         return value

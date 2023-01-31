@@ -43,8 +43,13 @@ async def parse_appcalendar_data(**kwargs):
             start_end = value.split("~")
             if ac_category_name in ("환불일", "납입일"):
                 ac_sdate = ac_edate = start_end[0]
+            elif ac_category_name in ("수요예측일", "공모일"):
+                ac_sdate, ac_edate = start_end
             else:
-                ac_sdate, ac_edate = value.split("~")
+                if len(value.split("~")) != 2:
+                    ac_sdate, ac_edate = value.split("~")
+                else:
+                    ac_sdate = ac_edate = ""
             if not ci_public_subscription_date:
                 result.append(
                     dict(
