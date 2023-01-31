@@ -109,6 +109,8 @@ def add_year_in_date_or_not(value):
         return value
     else:
         head, tail = value.replace(" ", "").split("~")
+        if head is None:
+            return ""
         year, _, _ = head.split("/")
         if len(tail) < 10:
             tail = f"{year}/{tail}"

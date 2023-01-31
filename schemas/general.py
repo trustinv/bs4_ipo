@@ -345,7 +345,6 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_refund_date", pre=True)
     def convert_ci_refund_date(cls, value):
-
         result = converters.dot_dash_to_slash(value)
         return result
 
@@ -356,7 +355,8 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_demand_forecast_date", pre=True)
     def convert_ci_demand_forecast_date(cls, value):
-        return converters.add_year_in_date_or_not(value)
+        result = converters.add_year_in_date_or_not(value)
+        return result
 
     @validator("ci_competition_rate", pre=True)
     def convert_ci_competition_rate(cls, value):
