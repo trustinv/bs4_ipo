@@ -157,11 +157,11 @@ class GeneralCreateSchema(GeneralBase):
 
     @validator("ci_review_c_date", pre=True)
     def convert_ci_review_c_date(cls, value):
-        return value.strip()
+        return value.replace(" ", "").replace(".", "/").replace("-", "/").strip()
 
     @validator("ci_review_a_date", pre=True)
     def convert_ci_review_a_date(cls, value):
-        return value.strip()
+        return value.replace(" ", "").replace(".", "/").replace("-", "/").strip()
 
     @validator("ci_establishment_date", pre=True)
     def convert_ci_establishment_date(cls, value):
