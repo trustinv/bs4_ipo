@@ -12,6 +12,7 @@ from db.dals.company_dal import Company
 from utilities.time_measure import timeit
 from apps.ipo.agents import get_user_agents
 from config.config_log import logging
+from async_retrying import retry
 
 logger = logging.getLogger("info-logger")
 
@@ -23,6 +24,7 @@ async def is_initialze(session) -> bool:
         return True
     # 이미 데이터가 있음.
     return False
+
 
 async def get_code(a_tag):
     try:
@@ -36,29 +38,23 @@ async def get_code(a_tag):
 
 
 async def is_listing_date(this_year, listing_date):
-    return datetime.strptime(f"{this_year}.{listing_date.string.strip()}", '%Y.%m.%d')+timedelta(days=1) > datetime.now()
+    return (
+        datetime.strptime(f"{this_year}.{listing_date.string.strip()}", "%Y.%m.%d")
+        + timedelta(days=1)
+        > datetime.now()
+    )
+
 
 async def belong_to_update(demand_forecast_date, listing_date, this_year, ci_code, ipo_companies):
-    if demand_forecast_date !='공모철회' and listing_date.string is None:
+    if demand_forecast_date != "공모철회" and listing_date.string is None:
         ipo_companies.append(ci_code)
-    elif demand_forecast_date !='공모철회' and await is_listing_date(this_year, listing_date):
+    elif demand_forecast_date != "공모철회" and await is_listing_date(this_year, listing_date):
         ipo_companies.append(ci_code)
-    elif demand_forecast_date =='공모철회' and listing_date.string is None:
+    elif demand_forecast_date == "공모철회" and listing_date.string is None:
         ipo_companies.append(ci_code)
-    elif demand_forecast_date =='공모철회' and await is_listing_date(this_year, listing_date):
+    elif demand_forecast_date == "공모철회" and await is_listing_date(this_year, listing_date):
         ipo_companies.append(ci_code)
-    return 
-
-async def delist(session, company_name):
-
-    instance = Company(session)
-    read, ci_demand_forcast_date = instance.read(company_name)
-
-    # DB에는 공모철회가 없지만 공모철회로 데이터를 바꾸어야함.
-    if read and ci_demand_forcast_date != "공모철회":
-        delisted = instance.delist(company_name)
-        if delisted:
-            logger.info("공모철회 한 회사 : {company_name}")
+    return
 
 
 async def get_name_n_code(td_name):
@@ -80,23 +76,18 @@ async def get_years(year):
         yield k
 
 
-from async_retrying import retry
-
-
 @retry(attempts=100)
 async def scrape_company_codes(year=2021):
     ipo_companies = []
     delisted_companies = []
     header = await get_user_agents()
-    update_companies = []
     this_year = str(datetime.now().year)
     async for year in get_years(year):
         logger.debug("연도", year)
         page_data = None
         page = 1
+
         while page_data is None:
-            ipo_companies_in_page = 0
-            delisted_companies_in_page = 0
             url = f"http://www.ipostock.co.kr/sub03/ipo02.asp?str4={year}&str5=all&page={page}"
             logger.debug(f"page: {page}, url: {url}")
             page += 1
@@ -124,70 +115,43 @@ async def scrape_company_codes(year=2021):
             table = soup.select_one(
                 "#print > table >  tr:nth-child(4) > td > table >  tr:nth-child(3) > td > table >  tr:nth-child(4) > td > table"
             )
-            
+
             for idx, tr in enumerate(table, 0):
                 if isinstance(tr, bs4.element.Tag) and tr is not None:
-                    if not is_initialized :
-                        ci_name = tr.select_one("td:nth-child(3)") 
+                    if not is_initialized:
+                        ci_name = tr.select_one("td:nth-child(3)")
                         listing_date = tr.select_one("td:nth-child(7)")
-                        
+
                         if str(year) == this_year and ci_name is not None:
-                            demand_forecast_date = tr.select_one("td:nth-child(2)").get_text().strip()
-                            ci_name = tr.select_one("td:nth-child(3)").get_text().replace(' ', '').strip() 
-                            ci_code = tr.select_one("td:nth-child(3) a") 
+                            demand_forecast_date = (
+                                tr.select_one("td:nth-child(2)").get_text().strip()
+                            )
+                            ci_name = (
+                                tr.select_one("td:nth-child(3)").get_text().replace(" ", "").strip()
+                            )
+                            ci_code = tr.select_one("td:nth-child(3) a")
                             ci_code = await get_code(ci_code)
                             listing_date = tr.select_one("td:nth-child(7)")
-                            await belong_to_update(demand_forecast_date, listing_date, this_year, ci_code, ipo_companies)
-                            
-                    else : 
+                            await belong_to_update(
+                                demand_forecast_date,
+                                listing_date,
+                                this_year,
+                                ci_code,
+                                ipo_companies,
+                            )
+
+                    else:
                         td = tr.find("td", {"width": "120"})
-
-                        # ci_demand_forecast_date = td.string.strip()
-
                         if td is not None:
                             td_name = tr.find("td", {"width": "*"})
                             delisting = td.text.strip()
                             company_code, company_name = await get_name_n_code(td_name)
 
-                            # DB에 데이터가 없는 경우
-
                             if delisting == "공모철회":
-                                # company = dict(
-                                #     delistted_company_name=company_name,
-                                #     delistted_company_code=company_code,
-                                # )
-                                # async with async_session() as session:
-                                # async with session.begin():
-                                # delist(session, company_name)
-                                # pass
                                 logger.info(f"공모철회 회사명 : {company_name}/ 코드:{company_code}")
-                                # delisted_companies.append(company)
                                 delisted_companies.append(company_code)
-                                # delisted_companies_in_page += 1
-
                             else:
-                                # company = dict(
-                                #     ipo_company_name=company_name, ipo_company_code=company_code
-                                # )
-                                # # print(company)
-                                # ipo_companies.append(company)
                                 ipo_companies.append(company_code)
-                                # ipo_companies_in_page += 1
-
-    # ipo_companies_codes = [
-    #     value
-    #     for ipo_company in ipo_companies
-    #     for key, value in ipo_company.items()
-    #     if key == "ipo_company_code"
-    # ]
-    # delisted_companies_codes = [
-    #     value
-    #     for delisted_company in delisted_companies
-    #     for key, value in delisted_company.items()
-    #     if key == "delistted_company_code"
-    # ]
-    # all_companies_codes = ipo_companies_codes + delisted_companies_codes
-    # logger.debug(f"모든 회사 코드: {all_companies_codes}")
     return ipo_companies + delisted_companies
 
 

@@ -26,7 +26,7 @@ async def parse_appcalendar_data(**kwargs):
         ci_demand_forecast_date=(1, "수요예측일"),
         ci_public_subscription_date=(2, "공모일"),
         ci_refund_date=(3, "환불일"),
-        ci_payment_date=(4, "납입일"),
+        ci_listing_date=(4, "상장일"),
     )
     ci_public_subscription_date = (
         False
@@ -41,7 +41,7 @@ async def parse_appcalendar_data(**kwargs):
         match = re.search(r"\d{4}", value)
         if match:
             start_end = value.split("~")
-            if ac_category_name in ("환불일", "납입일"):
+            if ac_category_name in ("환불일", "상장일"):
                 ac_sdate = ac_edate = start_end[0]
             elif ac_category_name in ("수요예측일", "공모일"):
                 ac_sdate, ac_edate = start_end
@@ -110,7 +110,7 @@ async def start_scrape(categories, code):
         ci_demand_forecast_date=general.ci_demand_forecast_date,
         ci_public_subscription_date=general.ci_public_subscription_date,
         ci_refund_date=general.ci_refund_date,
-        ci_payment_date=general.ci_payment_date,
+        ci_listing_date=general.ci_listing_date,
         ci_name=general.ci_name,
     )
 
