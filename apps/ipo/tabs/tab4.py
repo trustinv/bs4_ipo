@@ -213,7 +213,6 @@ if __name__ == "__main__":
         # print(s)
         # gi = g.dict()
         # print(gi["ci_demand_forecast_date"])
-        # print(gi["ci_appraised_price"])
         # pp(s)
 
     asyncio.run(main())

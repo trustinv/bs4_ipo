@@ -67,7 +67,7 @@ async def extract_data_from_table2(table: BeautifulSoup) -> Dict[str, Union[str,
     Returns:
     - Dict[str, Union[str, float]]: A dictionary containing the extracted data.
     """
-    result = {"ci_competition_rate": "", "ci_promise_content": "", "ci_promise_rate": 0.0}
+    result = {"ci_competition_rate": ""}
     if not table:
         return result
     try:
@@ -78,13 +78,7 @@ async def extract_data_from_table2(table: BeautifulSoup) -> Dict[str, Union[str,
             )
             .get_text()
             .replace(" ", "")
-            .replace("\xa0", ""),
-            "ci_promise_content": table.select_one("tr:nth-of-type(2) > td:nth-of-type(2)")
-            .get_text()
-            .strip(),
-            "ci_promise_rate": table.select_one("tr:nth-of-type(3) > td:nth-of-type(2)")
-            .get_text()
-            .strip(),
+            .replace("\xa0", "")
         }
         return result
     except (AttributeError, IndexError):
@@ -155,7 +149,6 @@ if __name__ == "__main__":
         # # pp(g.dict())
         # # pp(g.dict()["ci_competition_rate"])
         # # pp(g.dict()["ci_promise_rate"])
-        # # pp(g.dict()["ci_promise_content"])
         # si1 = s[0].dict()
         # si2 = s[1].dict()
         # si3 = s[2].dict()

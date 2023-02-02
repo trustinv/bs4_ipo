@@ -20,7 +20,6 @@ class FinancialBaseSchema(BaseModel):
     ci_turnover: float = 0.0
     ci_business_profits: float = 0.0
     ci_net_income: float = 0.0
-    ci_eps: float = 0.0
     ci_datetime: datetime = datetime.now()
 
 
@@ -71,10 +70,6 @@ class FinancialCreateSchema(FinancialBaseSchema):
 
     @validator("ci_net_income", pre=True)
     def convert_ci_net_income(cls, value):
-        return value
-
-    @validator("ci_eps", pre=True)
-    def convert_ci_eps(cls, value):
         return value
 
 

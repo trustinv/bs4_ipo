@@ -29,10 +29,6 @@ class GeneralBase(BaseModel):
     ci_progress: str = ""
     ci_name: str = ""
     ci_code: str = ci_name
-    ci_keyword1: str = ""
-    ci_keyword2: str = ""
-    ci_keyword3: str = ""
-    ci_keyword4: str = ""
     ci_list_type: str = ""
     ci_review_c_date: str = ""
     ci_review_a_date: str = ""
@@ -65,23 +61,18 @@ class GeneralBase(BaseModel):
     ci_after_po_capital: float = 0.0
     ci_after_po_stocks: int = 0.0
     ci_most_subscription: str = ""
-    ci_comment: str = ""
     ci_big_ir_plan: str = ""
     ci_demand_forecast_date: str = ""
     ci_public_subscription_date: str = ""
     ci_refund_date: str = ""
     ci_payment_date: str = ""
     ci_listing_date: str = ""
-    ci_appraised_price: int = 0
     ci_hope_po_price: str = ""
     ci_hope_po_amount: str = ""
     ci_confirm_po_price: int = 0
     ci_confirm_po_amount: float = 0.0
     ci_subscription_warrant_money_rate: str = ""
     ci_subscription_competition_rate: str = ""
-    ci_attractiveness: str = ""
-    ci_attractiveness_name: str = ""
-    ci_attractiveness_score: int = 0
     ci_public_offering_stocks: str = ""
     ci_professional_investor_stock: int = 0
     ci_professional_investor_rate: int = 0
@@ -91,9 +82,7 @@ class GeneralBase(BaseModel):
     ci_general_subscriber_rate: int = 0
     ci_overseas_investor_stock: int = 0
     ci_overseas_investor_rate: int = 0
-    ci_noted_items: str = ""
     ci_noted_items_check: str = ""
-    ci_guidelines: str = ""
     ci_guidelines_check: str = ""
     ci_small_ir_plan: str = ""
     ci_receipt_way: str = ""
@@ -104,8 +93,6 @@ class GeneralBase(BaseModel):
     ci_unit: str = ""
     ci_competition_rate: str = ""
     ci_current_ratio: int = 0
-    ci_promise_content: str = ""
-    ci_promise_rate: float = 0.0
     ci_like: int = 0
     ci_dislike: int = 0
     ci_vitalization1: str = "Y"
@@ -192,10 +179,6 @@ class GeneralCreateSchema(GeneralBase):
     @validator("ci_largest_shareholder_rate", pre=True)
     def convert_ci_largest_shareholder_rate(cls, value):
         return converters.string_rate_to_percentage(value)
-
-    @validator("ci_promise_rate", pre=True)
-    def convert_ci_promise_rate(cls, value):
-        return converters.string_rate_to_float(value)
 
     @validator("ci_po_expected_amount", pre=True)
     def convert_ci_po_expected_amount(cls, value):
@@ -367,20 +350,3 @@ class GeneralCreateSchema(GeneralBase):
     @validator("ci_po_expected_stocks", pre=True)
     def convert_ci_po_expected_stocks(cls, value):
         return converters.only_digits_to_int(value)
-
-    @validator("ci_promise_content", pre=True)
-    def convert_ci_promise_content(cls, value):
-        return value.replace(",", "\n")
-
-
-# class GeneralSchema(GeneralBase):
-#    ci_idx: int
-#    shareholders: List[CompanyInfoShareholderSchema]
-#    predictions = List[CompanyInfoPredictionSchema]
-#    subscribers = List[CompanyInfoSubscriberSchema]
-#    financials = List[CompanyInfoFinancialSchema]
-#    app_calendars = List[AppCalendarSchema]
-#
-#    class Config:
-#        orm_mode = True
-#        arbitrary_types_allowed = True
