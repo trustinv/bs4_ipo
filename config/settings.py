@@ -37,6 +37,21 @@ class DevSettings(GlobalSettings):
 
 
 class ProdSettings(GlobalSettings):
+    IPO_URL: str
+    LISTING_SERVER_IP: str
+    WEB_SERVER_IP: str
+    DB_HOST: str
+    DB_IPOLISTING: str
+    DB_GOOGLENEWS: str
+    DB_USER: str
+    DB_PASSWORD: str
+    DB_PORT: str
+    SLACK_WEB_HOOK_URL: str
+    REALTIME_PRICE_PAST_API: str
+    REALTIME_PRICE_API: str
+    DB_NAME: str
+    DELISTING: str = "공모철회"
+
     class Config:
         env_file = f"{config_path}/envs/prod.env"
 
