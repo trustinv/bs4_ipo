@@ -29,8 +29,6 @@ class GeneralBase(BaseModel):
     ci_progress: str = ""
     ci_name: str = ""
     ci_code: str = ci_name
-    ci_logo: str = ""
-    ci_logo_name: str = ""
     ci_keyword1: str = ""
     ci_keyword2: str = ""
     ci_keyword3: str = ""
