@@ -5,7 +5,7 @@ from config.settings import settings
 
 from utilities.time_measure import timeit
 from sqlalchemy import and_
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from db.models import (
     CompanyInfoShareholder as Shareholder,
     CompanyInfoFinancial as Financial,
@@ -61,7 +61,7 @@ class Company:
     async def get_count(self) -> General:
         count = await self._db_session.scalar(select(func.count(General.ci_idx)))
         return count
-        # return True if q.first() else False
+
 
     async def get_all_companies(self) -> List[General]:
         q = await self._db_session.execute(
@@ -81,45 +81,35 @@ class Company:
         q = await self._db_session.execute(select(General).where(General.ci_code == ci_code))
         result = q.scalars().first()
         if result:
-            return result.ci_code
+            return result
         return
 
     async def update(
         self,
         general: General,
+        # ci_code: int,
         shareholders: List[Shareholder],
         financials: List[Financial],
         subscribers: List[Subscriber],
         predictions: List[Prediction],
         calendars: List[Calendar],
     ) -> bool:
+        # g = await self.read(ci_code)
 
         general.shareholders = []
-        general.shareholders = shareholders
         general.financials = []
-        general.financials = financials
         general.subscribers = []
-        general.subscribers = subscribers
         general.predictions = []
+        general.app_calendars =[]
+        general.shareholders = shareholders
+        general.financials = financials
+        general.subscribers = subscribers
         general.predictions = predictions
-        general.app_calendars = []
         general.app_calendars = calendars
 
-        # query = (
-        #     update(General)
-        #     .where(General.ci_code == ci_code)
-        #     .values(
-        #         **new_company.__dict__,
-        #         shareholders=shareholders,
-        #         financials=financials,
-        #         subscribers=subscribers,
-        #         predictions=predictions,
-        #         app_calendars=calendars,
-        #     )
-        # )
-        # result = await self._db_session.execute(query)
-        # affected_rows = result.rowcount
-        await self._db_session.commit()
+        # await self._db_session.commit()
+        self._db_session.add(general)
+        # await self._db_session.flush()
         return True
 
     async def upsert(
@@ -140,9 +130,9 @@ class Company:
         predictions = [Prediction(**prediction.dict()) for prediction in predictions]
         calendars = [Calendar(**calendar.dict()) for calendar in calendars]
 
-        existed_ci_code = await self.read(ci_code)
-        logger.info(f"existed_ci_code: {existed_ci_code}")
-        if existed_ci_code is not None:
+        general = await self.read(ci_code)
+        logger.info(f"existed_ci_code: {general.ci_code}")
+        if general is not None:
             result = await self.update(
                 general,
                 shareholders,
@@ -194,9 +184,10 @@ if __name__ == "__main__":
             #     r = await company_dal.delist(r.ci_name)
             #     print(r)
             async with session.begin():
-                rs: General = await company_dal.get_one()
-                # print([r.ci_name for r in rs])
-                print(rs)
+                await company_dal.update(370190)
+                # rs: General = await company_dal.get_one()
+                # # print([r.ci_name for r in rs])
+                # print(rs)
 
             # r = await company_dal.get_all_delisted_companies_name()
             # print(r, len(r))

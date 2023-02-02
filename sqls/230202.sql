@@ -1,0 +1,1 @@
+UPDATE company_info_general SET ci_market_separation='코넥스'WHERE ci_code=408900;

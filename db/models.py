@@ -107,11 +107,11 @@ class CompanyInfoGeneral(Base):
     ci_public_schedule_datetime: datetime = Column(DateTime, comment="IPO공모관리 공모청약일정 업데이트 날짜")
     ci_datetime: datetime = Column(DateTime, nullable=False)
 
-    shareholders = relationship("CompanyInfoShareholder", back_populates="company")
-    predictions = relationship("CompanyInfoPrediction", back_populates="company")
-    subscribers = relationship("CompanyInfoSubscriber", back_populates="company")
-    financials = relationship("CompanyInfoFinancial", back_populates="company")
-    app_calendars = relationship("AppCalendar", back_populates="company")
+    shareholders = relationship("CompanyInfoShareholder", back_populates="company", lazy='selectin')
+    predictions = relationship("CompanyInfoPrediction", back_populates="company", lazy='selectin')
+    subscribers = relationship("CompanyInfoSubscriber", back_populates="company", lazy='selectin')
+    financials = relationship("CompanyInfoFinancial", back_populates="company", lazy='selectin')
+    app_calendars = relationship("AppCalendar", back_populates="company", lazy='selectin')
 
 
 class CompanyInfoShareholder(Base):

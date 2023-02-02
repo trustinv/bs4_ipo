@@ -115,6 +115,7 @@ if __name__ == "__main__":
 
     has_attr = hasattr(settings, "SLACK_WEB_HOOK_URL")
     print(has_attr)
+    print(settings.ENV_STATE)
     print(settings.LISTING_SERVER_IP)
     print(settings.WEB_SERVER_IP)
     print(settings.DB_HOST)
