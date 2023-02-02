@@ -54,24 +54,19 @@ class Company:
         await self._db_session.flush()
         return True
 
-    # async def get_companies_need_update(self) -> List[General]:
-    #     q = await self._db_session.execute(
-    #         select(General).where(and_(
-    #             General.ci_demand_forecast_date != "공모철회",
-    #             General.ci_listing_date >=
-    #             ))
-    #     )
     async def get_one(self) -> General:
         q = await self._db_session.execute(select(General).limit(1))
         return q.first()
-    
+
     async def get_count(self) -> General:
         count = await self._db_session.scalar(select(func.count(General.ci_idx)))
         return count
         # return True if q.first() else False
 
     async def get_all_companies(self) -> List[General]:
-        q = await self._db_session.execute(select(General).order_by(General.ci_demand_forecast_date))
+        q = await self._db_session.execute(
+            select(General).order_by(General.ci_demand_forecast_date)
+        )
         return q.scalars().all()
 
     async def get_all_delisted_companies_name(self) -> List[str]:
@@ -124,7 +119,7 @@ class Company:
         # )
         # result = await self._db_session.execute(query)
         # affected_rows = result.rowcount
-        # await self._db_session.commit()
+        await self._db_session.commit()
         return True
 
     async def upsert(
@@ -202,7 +197,7 @@ if __name__ == "__main__":
                 rs: General = await company_dal.get_one()
                 # print([r.ci_name for r in rs])
                 print(rs)
-                
+
             # r = await company_dal.get_all_delisted_companies_name()
             # print(r, len(r))
         await engine.dispose()

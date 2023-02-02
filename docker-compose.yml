@@ -3,6 +3,8 @@ services:
   crawler:
     image: python:3.10-slim
     container_name: ipo_cralwer
+    environment:
+      CRAWLING_MODE: ${CRAWLING_MODE:-dev}
     build:
       context: .
       dockerfile: Dockerfile
