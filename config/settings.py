@@ -85,7 +85,7 @@ class FactorySettings:
         elif ENV_STATE == "prod":
             return ProdSettings()
         elif ENV_STATE == "test":
-            return ProdSettings()
+            return TestSettings()
 
 
 settings = FactorySettings.load()
