@@ -23,11 +23,12 @@ logger = logging.getLogger("info-logger")
 
 async def parse_appcalendar_data(**kwargs):
     date_criteria = dict(
-        ci_demand_forecast_date=(1, "수요예측일"),
-        ci_public_subscription_date=(2, "공모일"),
+        ci_public_subscription_date=(1, "청약일"),
+        ci_listing_date=(2, "상장일"),
         ci_refund_date=(3, "환불일"),
-        ci_listing_date=(4, "상장일"),
+        ci_demand_forecast_date=(4, "수요예측일"),
     )
+
     ci_public_subscription_date = (
         False
         if kwargs.get("ci_public_subscription_date") == "공모철회"
